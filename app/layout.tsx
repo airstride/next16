@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AuthWrapper from "@/components/auth/AuthWrapper";
+import GlobalProviders from "@/components/providers/Providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,7 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <AuthWrapper
+          authUrl={process.env.NEXT_PUBLIC_AUTH_URL!}
+          redirectUrl="/"
+        >
+          <GlobalProviders>{children}</GlobalProviders>
+        </AuthWrapper>
       </body>
     </html>
   );

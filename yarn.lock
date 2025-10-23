@@ -1994,6 +1994,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@propelauth/nextjs@npm:^0.3.15":
+  version: 0.3.15
+  resolution: "@propelauth/nextjs@npm:0.3.15"
+  dependencies:
+    "@propelauth/node-apis": "npm:^2.1.33"
+    jose: "npm:^5.10.0"
+  peerDependencies:
+    next: ^13.1.0 || ^14.0.0 || ^15.0.0
+    react: ^18.2.0 || ^19.0.0
+  checksum: 10c0/0e4a30e614e79235bba3432cb78ee3c1e43015d79cdab524381af14a86920a1d1898c1ce9f279319055a153f343e8a58a30bb64ab5462c808ebd2f610d3e29a1
+  languageName: node
+  linkType: hard
+
+"@propelauth/node-apis@npm:^2.1.33":
+  version: 2.1.33
+  resolution: "@propelauth/node-apis@npm:2.1.33"
+  checksum: 10c0/6e8615ee036f34ed393b103b2247d83e1527e554e23330eb48fbd8f6d8fa1f322c61a2cdb81495449467630bdc1683ac529272a28d2025bbe9ac19ba9aa602bb
+  languageName: node
+  linkType: hard
+
 "@protobufjs/aspromise@npm:^1.1.1, @protobufjs/aspromise@npm:^1.1.2":
   version: 1.1.2
   resolution: "@protobufjs/aspromise@npm:1.1.2"
@@ -4482,6 +4502,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jose@npm:^5.10.0":
+  version: 5.10.0
+  resolution: "jose@npm:5.10.0"
+  checksum: 10c0/e20d9fc58d7e402f2e5f04e824b8897d5579aae60e64cb88ebdea1395311c24537bf4892f7de413fab1acf11e922797fb1b42269bc8fc65089a3749265ccb7b0
+  languageName: node
+  linkType: hard
+
 "js-tokens@npm:^3.0.0 || ^4.0.0, js-tokens@npm:^4.0.0":
   version: 4.0.0
   resolution: "js-tokens@npm:4.0.0"
@@ -4873,6 +4900,7 @@ __metadata:
     "@mantine/form": "npm:^8.3.5"
     "@mantine/hooks": "npm:^8.3.5"
     "@mantine/notifications": "npm:^8.3.5"
+    "@propelauth/nextjs": "npm:^0.3.15"
     "@tanstack/react-query": "npm:^5.90.5"
     "@types/node": "npm:^24.9.1"
     "@types/react": "npm:^19.2.2"

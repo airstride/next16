@@ -1,7 +1,7 @@
 # Growthmind Development TODO List
 
-## Phase v0.1 — Strategy Generator (~2 weeks)
-**Goal:** Generate first 30-day plan (no automation)
+### Prerequisites & Infrastructure
+**These must be completed before building the Projects Module**
 
 ### Database Setup
 - [x] Set up MongoDB connection with `DatabaseService` in `shared/db/database.service.ts`
@@ -10,6 +10,177 @@
   - [x] Connection state logging and race condition prevention
   - [x] Model registry pattern for modular architecture
   - [x] Type-safe model registration with generics
+
+#### Authentication (PropelAuth)
+- [x] Install PropelAuth Next.js package
+  - [x] Run `yarn add @propelauth/nextjs`
+  - [x] Note: May show peer dependency warning for Next.js 16 (safe to ignore)
+- [x] Configure PropelAuth environment variables
+  - [x] Add `PROPELAUTH_AUTH_URL` to `.env.example`
+  - [x] Add `PROPELAUTH_API_KEY` to `.env.example`
+  - [x] Add `PROPELAUTH_VERIFIER_KEY` to `.env.example`
+  - [x] Add `PROPELAUTH_REDIRECT_URI` to `.env.example`
+- [x] Create `.env.example` with PropelAuth variables
+- [x] Create authentication service in `shared/auth/auth.service.ts`
+  - [x] User management functions (getUsersByQuery, getUser, updateUser, deleteUser)
+  - [x] Organization management (getOrganisations, createOrganisation, updateOrganisation, deleteOrganisation)
+  - [x] User-organization relationship functions (getUsersByOrg, inviteUser, removeUserFromOrg, updateUserRoleInOrg)
+  - [x] Invite management (getInvitesByOrg, revokeInvite)
+  - [x] Auth helpers (getUserFromAuthHeader, sanitizeOrganizationName)
+  - [x] Custom PropelAuthError class with error handling
+  - [x] Type aliases for decoupling from PropelAuth types
+
+#### React Query (TanStack Query)
+- [x] Install React Query packages
+  - [x] Run `yarn add @tanstack/react-query @tanstack/react-query-devtools`
+  - [x] Core library for server state management
+- [x] Create query client in `shared/query/query.client.ts`
+  - [x] Configure QueryClient with sensible defaults
+  - [x] Set staleTime (5 minutes) and gcTime (10 minutes)
+  - [x] Configure retry logic (skip 4xx errors, max 2 retries for 5xx)
+  - [x] Enable refetchOnWindowFocus and refetchOnReconnect
+  - [x] Export helper functions: invalidateQueries, removeQueries, clearCache, prefetchQuery
+- [x] Create QueryProvider in `components/providers/QueryProvider.tsx`
+  - [x] Wrap app with QueryClientProvider
+  - [x] Include ReactQueryDevtools in development mode
+  - [x] Export QueryProvider component
+- [x] Integrate QueryProvider in root layout
+  - [x] Import and wrap children with QueryProvider in `app/layout.tsx`
+  - [x] Ensure it's inside any auth providers (integrated via GlobalProviders)
+  - [x] Verify devtools appear in development
+
+#### Error Handling
+- [x] Create custom error classes in `shared/utils/errors.ts`
+  - [x] `BaseError` - Base error class with statusCode and metadata
+  - [x] `ValidationError` - 400 errors for input validation failures (with `.fromZod()` helper)
+  - [x] `AuthenticationError` - 401 errors for missing/invalid auth
+  - [x] `AuthorizationError` - 403 errors for insufficient permissions
+  - [x] `NotFoundError` - 404 errors for missing resources
+  - [x] `ConflictError` - 409 errors for duplicate resources
+  - [x] `RateLimitError` - 429 errors for rate limit exceeded
+  - [x] `DatabaseError` - 500 errors for database operation failures (with `.fromMongoose()` helper)
+  - [x] `ExternalServiceError` - 502 errors for third-party API failures
+  - [x] `ServiceUnavailableError` - 503 errors for service unavailable
+  - [x] Error serialization method for consistent API responses (`.toJSON()`)
+  - [x] Error logging integration with logger (automatic `.log()`)
+  - [x] `ErrorHandler` class with `.handle()` and `.handleAsync()` methods
+  - [x] `ErrorResponse` helpers for quick error responses
+  - [x] `withErrorHandler` HOF for automatic error handling in routes
+  - [x] Created `shared/api/response.helper.ts` with success response utilities
+  - [x] Created comprehensive documentation in `shared/api/README.md`
+  - [x] Created quick reference guide in `shared/utils/ERROR_HANDLING_GUIDE.md`
+
+#### API Utilities
+- [x] Create query parser in `shared/utils/query.parser.ts`
+  - [x] Generic `UniversalQueryParser<T>` class with strict type-safe configuration
+  - [x] `parse()` - Parse and validate URL search params with operator support
+  - [x] `parsePagination()` - Extract page, page_size, skip from query
+  - [x] `parseFilters()` - Parse filter parameters with operator support (eq, neq, gt, gte, lt, lte, in, nin, contains, starts, ends)
+  - [x] `parseSorting()` - Parse sort field and direction (comma-separated, +/- prefix)
+  - [x] `parseSearch()` - Parse search across configured text/exact fields
+  - [x] Strict type-safe configuration with compile-time completeness checking
+  - [x] Default values for pagination (page: 1, page_size: 20, maxPageSize: 100)
+  - [x] `baseFilterableFields` and `optionalBaseFilterableFields` helpers for common schema fields
+  - [x] `QueryValidationError` class for detailed validation error messages
+
+#### Repository Layer
+- [x] Create `BaseRepository<T>` class in `shared/db/base.repository.ts`
+  - [x] Generic repository pattern with lazy model initialization from registry
+  - [x] CRUD operations: `create()`, `findById()`, `findOne()`, `find()` with pagination
+  - [x] `updateById()` - Update document by ID with validation
+  - [x] `atomicUpdate()` - Atomic updates using MongoDB $set operator
+  - [x] `softDelete()` - Soft delete support (is_deleted flag)
+  - [x] `count()` - Count documents with filters (excludes soft-deleted)
+  - [x] `validateId()` - MongoDB ObjectId validation
+  - [x] Query building with filters, pagination, sorting
+  - [x] Populate/include relationship handling (`findWithPopulate()`, `findByIdWithPopulate()`)
+  - [x] Bulk operations: `insertMany()`, `bulkWrite()`, `upsert()`
+  - [x] `findDeleted()` - Query soft-deleted records
+  - [x] `updateByIdWithArrayFilters()` - Array filter support for nested updates
+  - [x] `cloneToCollection()` - High-performance cloning using aggregation pipeline
+  - [x] Soft-delete logic automatically applied to all queries
+  - [x] Enhanced error handling with model context
+
+#### Service Layer
+- [x] Create `BaseService` class in `shared/services/base.service.ts`
+  - [x] Abstract base class with OOP principles (Inheritance, Encapsulation, Abstraction, Polymorphism)
+  - [x] Lazy-initialized protected `repository` property of type `BaseRepository<T>`
+  - [x] Abstract methods: `mapEntityToResponse()`, `prepareEntityForCreate()`, `prepareEntityForUpdate()`
+  - [x] Optional methods: `prepareEntityForQuery()`, `getCloneFieldMappings()`, `prepareCloneStaticFields()`
+  - [x] CRUD operations: `create()`, `createMany()`, `upsert()`, `upsertMany()`, `updateById()`, `findById()`, `findAll()`, `findOne()`, `deleteById()`
+  - [x] Advanced queries: `findAllWithPopulate()`, `findAllDeleted()`, `findAllWithAccessControl()`
+  - [x] Access control: `applyAccessControl()` with user-level and organization-level filtering
+  - [x] Aggregation support: `aggregate()` method for complex queries
+  - [x] Cloning support: `cloneToCollection()` with field mappings and static fields
+  - [x] Helper methods: `count()`, `validateId()`
+  - [x] Type-safe generics: `TEntity`, `TCreateRequest`, `TUpdateRequest`, `TResponse`
+  - [x] Audit tracking support (created_by, updated_by, created_by_propel_auth_org_id)
+
+#### API Higher-Order Functions (HOFs)
+- [x] Create `withAuth` HOF in `shared/api/with-auth.ts`
+  - [x] Wrap API routes with PropelAuth authentication
+  - [x] Extract user from request and add to context (`auth` prop)
+  - [x] Handle authentication errors (401 Unauthorized)
+  - [x] Handle authorization errors (403 Forbidden)
+  - [x] Add user info to props: `auth.user`, `auth.userId`, `auth.activeOrgId`, etc.
+  - [x] Validate PropelAuth tokens via AuthService
+  - [x] Support permission-based access control (`PermissionConfig`)
+  - [x] Support role-based access control (requiredRoles, anyRoles)
+  - [x] Custom permission check function support
+
+- [x] Create `withDB` HOF in `shared/api/with-db.ts`
+  - [x] Ensure database connection before route handler executes
+  - [x] Call `DatabaseService.connect()` automatically
+  - [x] Handle connection errors gracefully
+  - [x] Add database metadata to props for debugging
+  - [x] Enhance errors with database context
+  - [x] Automatic connection state tracking
+
+- [x] Create `withValidation` HOF in `shared/api/with-validation.ts`
+  - [x] Validate request body with Zod schemas
+  - [x] Return 400 errors with detailed Zod error messages
+  - [x] Type-safe: infer validated data types from Zod schemas
+  - [x] Parse and validate JSON body automatically
+  - [x] Handle Zod validation errors gracefully
+  - [x] Add validated data to props: `body`
+  - [x] Support custom error messages
+  - [x] Created `withPatchValidation` for PATCH requests
+  - [x] JSON Patch (RFC 6902) support for PATCH operations
+  - [x] Convert JSON Patch operations to partial update objects
+
+- [x] Create HOF composition helper in `shared/api/with-auth.ts`
+  - [x] `compose()` - Combine multiple HOFs
+  - [x] Type-safe middleware composition
+  - [x] Example: `compose(withAuth, withDB, withValidation(schema))`
+  - [x] Execution order: right-to-left (standard function composition)
+  - [x] Error handling at each layer (bubbles up)
+
+#### API Response Helpers
+- [x] Create response utilities in `shared/api/response.helpers.ts`
+  - [x] `successResponse<T>(data: T, status?)` - Standard success response format
+  - [x] `paginatedResponse<T>(data: T[], meta)` - Response with pagination metadata
+  - [x] `errorResponse(message, status, details?)` - Standard error response format
+  - [x] `notFoundResponse(resource?)` - 404 Not Found responses
+  - [x] `unauthorizedResponse(message?)` - 401 Unauthorized responses
+  - [x] `forbiddenResponse(message?)` - 403 Forbidden responses
+  - [x] `validationErrorResponse(details, message?)` - 400 Validation Error responses
+  - [x] `conflictResponse(message?)` - 409 Conflict responses
+  - [x] `createdResponse<T>(data)` - 201 Created responses
+  - [x] `noContentResponse()` - 204 No Content responses
+  - [x] Consistent JSON structure across all endpoints
+
+#### Type Definitions
+- [x] Update `shared/types/index.ts` with common API types
+  - [x] Created `shared/types/api-hof.types.ts` with HOF type definitions
+  - [x] `NextRouteContext<P>` - Next.js 15+ route context with async params
+  - [x] `CoreHandler<P, TProps>` - Core handler type that HOFs wrap
+  - [x] `NextRouteHandler<P>` - Final route handler type for Next.js
+  - [x] `WithAuthProps` - Authentication properties injected by withAuth
+  - [x] `PermissionConfig` - Permission configuration for access control
+  - [x] All types properly exported from `shared/types/index.ts`
+
+## Phase v0.1 — Strategy Generator (~2 weeks)
+**Goal:** Generate first 30-day plan (no automation)
 
 ### Projects Module (Context Ingestion)
 - [ ] Define Mongoose schema in `modules/projects/schema.ts`
@@ -93,9 +264,10 @@
   - [ ] Plan status indicator
 
 ### Authentication
-- [ ] Set up PropelAuth
-  - [ ] Add PropelAuth configuration
-  - [ ] Create auth middleware
+- [x] Set up PropelAuth
+  - [x] Add PropelAuth configuration
+  - [x] Create auth service in `shared/auth/auth.service.ts`
+  - [ ] Create auth middleware (withAuth HOF)
   - [ ] Protect API routes
   - [ ] Add user context to requests
 
