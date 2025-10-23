@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+echo "🔍 Checking file naming conventions..."
+
+# Run our external naming convention check script
+node .husky/naming-check.js
+
+# Check the exit code of the Node.js script
+if [ $? -ne 0 ]; then
+  # Script returned non-zero exit code, meaning there were naming convention errors
+  exit 1
+fi
+
+# If we get here, then naming conventions checks passed
+echo "✅ Naming conventions are valid."
+
+echo "🔍 Running linting..."
+yarn lint
+
+# Check the exit code of the yarn lint command
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed. Please fix the linting issues before committing."
+  exit 1
+fi
+
+echo "✅ Commit allowed - all checks passed."
