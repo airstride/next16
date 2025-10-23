@@ -22,7 +22,7 @@ Owns company context and onboarding data - the foundational "truth file" for all
 
 - `schema.ts` - Mongoose Project/Company model
 - `validation.ts` - Zod schemas for onboarding context (company, ICP, goals, clients, revenue, campaigns)
-- `service.ts` - createProject(), updateContext(), getProjectContext()
+- `service.ts` - createProject(), updateContext(), researchWebsite(), createProjectFromWebsite()
 - `inngest.ts` - Emits 'project.created', 'context.updated'
 
 **Data stored:**
@@ -34,6 +34,14 @@ Owns company context and onboarding data - the foundational "truth file" for all
 - Brand voice and style guidelines
 - Current campaigns
 - Marketing assets (URLs, social handles)
+- Research metadata (researchStatus, researchedAt, researchSource)
+
+**AI-Powered Context Ingestion:**
+- Primary workflow: User submits website URL → AI researches website → Context auto-populated
+- Uses `ai-sdk` with `generateStructuredOutputWithWebSearch()` for intelligent web scraping
+- AI extracts factual data (company name, products, social handles) and infers strategic data (ICP, goals, brand voice)
+- Users can refine/override AI-extracted context
+- Fallback to manual entry if research fails or is insufficient
 
 #### Strategy Module (`modules/strategy/`)
 Generates and stores growth strategy plans based on project context.

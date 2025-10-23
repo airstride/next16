@@ -4,10 +4,12 @@
 **Goal:** Generate first 30-day plan (no automation)
 
 ### Database Setup
-- [ ] Set up MongoDB connection in `shared/db/connect.ts`
-  - [ ] Add MONGODB_URI to environment variables
-  - [ ] Create connection helper with retry logic
-  - [ ] Add connection state logging
+- [x] Set up MongoDB connection with `DatabaseService` in `shared/db/database.service.ts`
+  - [x] Environment-specific connection pooling (dev/production/serverless)
+  - [x] Connection helper with bounded retry logic
+  - [x] Connection state logging and race condition prevention
+  - [x] Model registry pattern for modular architecture
+  - [x] Type-safe model registration with generics
 
 ### Projects Module (Context Ingestion)
 - [ ] Define Mongoose schema in `modules/projects/schema.ts`
@@ -19,18 +21,36 @@
   - [ ] Brand voice guidelines
   - [ ] Current campaigns
   - [ ] Marketing assets (URLs, social handles)
+  - [ ] Research metadata (researchStatus, researchedAt, researchSource)
 - [ ] Create Zod validation schemas in `modules/projects/validation.ts`
-  - [ ] Onboarding input validation
+  - [ ] Website URL input validation (for AI research trigger)
+  - [ ] AI-extracted context validation schema
+  - [ ] Manual context override validation
   - [ ] Update context validation
   - [ ] Response schemas
-- [ ] Implement service layer in `modules/projects/service.ts`
-  - [ ] `createProject(data)` - Create new project
+- [ ] Implement AI research service in `modules/projects/service.ts`
+  - [ ] `researchWebsite(websiteUrl)` - Use ai-sdk with web search to research company
+    - [ ] Use `generateStructuredOutputWithWebSearch()` from ai-sdk
+    - [ ] Extract company name, industry, stage, product description
+    - [ ] Identify potential ICP based on website content
+    - [ ] Extract social handles and marketing assets
+    - [ ] Analyze brand voice from website content
+    - [ ] Infer business goals from website messaging
+  - [ ] `createProjectFromWebsite(websiteUrl, userId)` - Research + create project
+    - [ ] Call `researchWebsite()` to get AI-extracted context
+    - [ ] Store extracted data in Projects schema
+    - [ ] Mark as AI-researched with metadata
+    - [ ] Allow manual refinement later
+  - [ ] `createProject(data)` - Create project with manual data
   - [ ] `getProjectContext(projectId)` - Retrieve project data
   - [ ] `updateContext(projectId, updates)` - Update project details
+  - [ ] `refineContext(projectId, refinements)` - User refines AI-extracted data
 - [ ] Build API route in `app/api/projects/route.ts`
-  - [ ] POST /api/projects - Create project
+  - [ ] POST /api/projects/research - Submit website URL for AI research
+  - [ ] POST /api/projects - Create project (manual or from research)
   - [ ] GET /api/projects/:id - Get project
   - [ ] PATCH /api/projects/:id - Update project
+  - [ ] POST /api/projects/:id/refine - Refine AI-extracted context
 
 ### Strategy Module (Plan Generation)
 - [ ] Define Mongoose schema in `modules/strategy/schema.ts`
@@ -435,6 +455,23 @@ TWITTER_API_SECRET=
 - Document everything - you'll need it when adding autonomy
 - Test event flows thoroughly - they're the foundation of autonomy
 - Don't build integrations until v0.4+ unless needed for testing
+
+### AI-Powered Website Research (Context Ingestion)
+- **Primary workflow:** User submits website URL → AI researches → Context auto-populated
+- **AI Research Process:**
+  - Use `generateStructuredOutputWithWebSearch()` from ai-sdk for intelligent web scraping
+  - AI browses website, extracts company info, product details, brand voice
+  - Structured output ensures consistent data format for database storage
+  - Use temperature: TemperaturePreset.PRECISE (0.3) for factual extraction
+  - Use model: AIModel.GEMINI_2_5_FLASH for cost-effective research
+- **Research Quality:**
+  - AI extracts factual data (company name, industry, products, social handles)
+  - AI infers strategic data (ICP hints, business goals, brand voice)
+  - Mark extracted vs inferred data differently in schema
+  - Allow users to refine/override AI-extracted context
+- **Fallback:** Support manual context entry if website research fails or is insufficient
+- **Future Enhancement:** Could trigger research as Inngest background job for better UX
+- **Cost Consideration:** Research per website is one-time cost, optimize prompts for accuracy
 
 ### TypeScript Event Pattern Enforcement
 - **ALL Inngest events MUST extend `BaseEvent<TName, TData>`** - this is enforced at compile time
