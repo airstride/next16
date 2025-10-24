@@ -193,7 +193,9 @@ export class DatabaseError extends BaseError {
     if (mongooseError.name === "ValidationError") {
       const errors: Record<string, string[]> = {};
       Object.keys(mongooseError.errors || {}).forEach((key) => {
-        errors[key] = [mongooseError.errors[key].message];
+        errors[key] = [
+          mongooseError.errors?.[key]?.message || "Validation error",
+        ];
       });
       return new ValidationError("Database validation failed", { errors });
     }

@@ -20,6 +20,7 @@
 
 // Export service and class
 export { AISdkService, aiSdkService } from "./ai.sdk.service";
+import { ModelMessage } from "ai";
 
 // Export conversation manager
 export {
@@ -67,10 +68,8 @@ export {
   type ToolCallResult,
   type WebSearchConfig,
   type GenerateWithToolsResult,
-  type ModelMessage,
   GenerateConfigSchema,
   ConversationMessageSchema,
 } from "./types";
 
-// Export tools
-export { availableTools, getTools, calculatorTool } from "./tools";
+export type { ModelMessage };

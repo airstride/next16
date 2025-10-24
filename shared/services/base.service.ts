@@ -1,10 +1,12 @@
-import { BaseRepository } from "@/shared/db/base.repository";
+import { IRepository } from "@/shared/db/repository.interface";
+import { RepositoryFactory } from "@/shared/db/repository.factory";
 import {
   CloneOperationResult,
   CloneToCollectionOptions,
 } from "@/shared/types/clone.types";
 import {
   BulkWriteResult,
+  DatabaseId,
   EntityFilter,
   IEntity,
   IPaginationResponse,
@@ -31,7 +33,7 @@ import {
  * - Polymorphism: Concrete services implement abstract methods differently
  *
  * Type Parameters:
- *   TEntity - The entity document type (extends IEntity)
+ *   TEntity - The entity document type (extends IEntity with DatabaseId)
  *   TRequest - The Zod-validated request type (extends IZod)
  *   TUpdateRequest - The Zod-validated update request type (extends IZod or Partial<TRequest>)
  *   TResponse - The API response type (extends ISuccessResponse for CRUD operations)
@@ -52,14 +54,14 @@ import {
  *   }
  */
 export abstract class BaseService<
-  TEntity extends IEntity,
+  TEntity extends IEntity<DatabaseId>,
   TCreateRequest extends IZod,
   TUpdateRequest extends
     | IZod
     | Partial<TCreateRequest> = Partial<TCreateRequest>,
   TResponse extends ISuccessResponse = ISuccessResponse
 > {
-  private _repository: BaseRepository<TEntity> | null = null;
+  private _repository: IRepository<any, any> | null = null;
   private readonly modelName: string;
 
   /**
@@ -71,12 +73,14 @@ export abstract class BaseService<
   }
 
   /**
-   * Lazy initialization of repository to prevent instantiation at module load time
-   * This ensures the database and models are initialized before accessing the repository
+   * Lazy initialization of repository to prevent instantiation at module load time.
+   * Uses RepositoryFactory to create the appropriate repository based on database configuration.
+   * This ensures the database and models are initialized before accessing the repository.
    */
-  protected get repository(): BaseRepository<TEntity> {
+  protected get repository(): IRepository<any, any> {
     if (!this._repository) {
-      this._repository = new BaseRepository<TEntity>(this.modelName);
+      // Create repository using factory - allows switching databases via configuration
+      this._repository = RepositoryFactory.create<any>(this.modelName);
     }
     return this._repository;
   }
@@ -102,7 +106,7 @@ export abstract class BaseService<
     userId: string,
     orgId: string,
     ...args: any[]
-  ): Partial<TEntity>;
+  ): TEntity;
 
   /**
    * Abstract method to prepare request data for entity updates
@@ -469,12 +473,19 @@ export abstract class BaseService<
   }
 
   /**
-   * Execute MongoDB aggregation pipeline
-   * @param pipeline - MongoDB aggregation pipeline array
+   * Execute database aggregation pipeline
+   * Note: This is database-specific and may not be supported by all repository implementations
+   * @param pipeline - Aggregation pipeline array (format depends on database)
    * @returns Promise resolving to aggregation results
+   * @throws Error if the repository doesn't support aggregation
    */
   public async aggregate(pipeline: any[]): Promise<any[]> {
-    return this.repository["model"].aggregate(pipeline);
+    if (!this.repository.aggregate) {
+      throw new Error(
+        `Aggregation is not supported by the current repository implementation`
+      );
+    }
+    return await this.repository.aggregate(pipeline);
   }
 
   /**

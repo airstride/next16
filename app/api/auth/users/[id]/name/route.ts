@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { Permissions } from "@/types/enums";
-import { getUser } from "@/utils/propelAuth";
+import { withAuth } from "@/shared/api/hofs/withAuth";
+import { Permissions } from "@/shared/auth/types";
+import { getUser } from "@/shared/auth/auth.service";
+import { withDb } from "@/shared/api/hofs/withDb";
 
 /**
  * Get user display name by ID
@@ -13,7 +13,7 @@ import { getUser } from "@/utils/propelAuth";
  * @openapi
  */
 export const GET = withAuth(
-  withDB(async (_req, { params }) => {
+  withDb(async (_req, { params }) => {
     try {
       // Extract target user ID from URL parameter [id]
       const { id: targetUserId } = await params;
@@ -26,12 +26,18 @@ export const GET = withAuth(
       const propelUser = await getUser(targetUserId);
 
       if (!propelUser) {
-        return NextResponse.json({ name: targetUserId.slice(-8) }, { status: 200 });
+        return NextResponse.json(
+          { name: targetUserId.slice(-8) },
+          { status: 200 }
+        );
       }
 
       // Build full name
-      const fullName = `${propelUser.firstName || ""} ${propelUser.lastName || ""}`.trim();
-      const displayName = fullName || propelUser.email || targetUserId.slice(-8);
+      const fullName = `${propelUser.firstName || ""} ${
+        propelUser.lastName || ""
+      }`.trim();
+      const displayName =
+        fullName || propelUser.email || targetUserId.slice(-8);
 
       return NextResponse.json({ name: displayName }, { status: 200 });
     } catch (error) {
@@ -41,6 +47,6 @@ export const GET = withAuth(
     }
   }),
   {
-    requiredPermissions: [Permissions.READ_DEALS],
+    requiredPermissions: [Permissions.READ_USERS],
   }
 );

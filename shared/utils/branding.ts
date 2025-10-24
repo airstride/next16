@@ -8,8 +8,10 @@ export type IconRendererProps = React.ComponentType<{
   stroke?: number;
 }>;
 
+export type IconType = keyof typeof Icons;
+
 export type BaseIconComponentProps = {
-  icon: keyof typeof Icons;
+  icon: IconType;
   size?: number | MantineSize;
   color?: string;
 };

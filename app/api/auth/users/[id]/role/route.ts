@@ -4,14 +4,11 @@ import {
   UpdateUserRoleRequest,
   UpdateUserRoleZodSchema,
 } from "@/app/api/_validations/auth/update.user.validation";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { withUserValidation } from "@/hooks/withUserValidation";
-import { withValidation } from "@/lib/zod/validation";
-import { organisationService } from "@/services/organisation.service";
-import { Permissions } from "@/types/enums";
-import { createErrorResponse } from "@/utils/api.error.handler";
-import { getUser, updateUserRoleInOrg } from "@/utils/propelAuth";
+import { withAuth, withValidation } from "@/shared/api";
+import { withUserValidation } from "@/shared/api/hofs/withUserValidation";
+import { Permissions } from "@/shared/auth/types";
+import { createErrorResponse } from "@/shared/api/response.helpers";
+import { getUser, updateUserRoleInOrg } from "@/shared/auth/auth.service";
 
 /**
  * Update a user role
@@ -22,41 +19,43 @@ import { getUser, updateUserRoleInOrg } from "@/utils/propelAuth";
  * @openapi
  */
 export const POST = withAuth(
-  withDB(
-    withUserValidation(
-      withValidation(UpdateUserRoleZodSchema, async (_req, {}, { body, userId, activeOrgId }) => {
+  withUserValidation(
+    withValidation(
+      UpdateUserRoleZodSchema,
+      async (_req, {}, { body, userId }) => {
         try {
           const userData = body as UpdateUserRoleRequest;
-          const organisation = await organisationService.find(userData.org_id, activeOrgId);
 
-          if (!organisation) {
-            return createErrorResponse(new Error("Organisation not found"));
-          }
-
-          // Update user in PropelAuth using the PropelAuth org ID
+          // userData.org_id is the PropelAuth org ID
           const propelResult = await updateUserRoleInOrg({
             userId,
-            orgId: organisation.propel_auth_org_id,
+            orgId: userData.org_id,
             role: userData.role,
           });
 
           if (!propelResult) {
-            return createErrorResponse(new Error("Failed to update user role in PropelAuth"));
+            return createErrorResponse(
+              new Error("Failed to update user role in PropelAuth")
+            );
           }
 
           // Get updated user data
           const updatedUser = await getUser(userId);
           if (!updatedUser) {
-            return createErrorResponse(new Error("Failed to retrieve updated user"));
+            return createErrorResponse(
+              new Error("Failed to retrieve updated user")
+            );
           }
 
           const userResponse = UserResponse.fromPropelAuthUser(updatedUser);
 
-          return NextResponse.json<UserResponse>(userResponse, { status: 200 });
+          return NextResponse.json<UserResponse>(userResponse, {
+            status: 200,
+          });
         } catch (error) {
           return createErrorResponse(error);
         }
-      })
+      }
     )
   ),
   {

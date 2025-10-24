@@ -5,13 +5,14 @@
  */
 
 // Higher-Order Functions
-export { withAuth, compose } from "./with-auth";
-export type { WithAuthProps, PermissionConfig } from "./with-auth";
+export { withAuth } from "./hofs/withAuth";
+export type { WithAuthProps } from "./hofs/withAuth";
 
-export { withDB } from "./with-db";
+export { withSubscription } from "./hofs/withSubscription";
+export { withDb as withDb } from "./hofs/withDb";
 
-export { withValidation, withPatchValidation } from "./with-validation";
-export type { JsonPatchOperation } from "./with-validation";
+export { withValidation, withPatchValidation } from "./hofs/withValidation";
+export type { JsonPatchOperation } from "./hofs/withValidation";
 
 // Response Helpers
 export {
@@ -25,5 +26,5 @@ export {
   conflictResponse,
   createdResponse,
   noContentResponse,
+  createErrorResponse,
 } from "./response.helpers";
-

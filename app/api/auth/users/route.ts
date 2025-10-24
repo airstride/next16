@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-import { OrganisationResponse } from "@/app/api/_responses/organisation.response";
 import {
   CreateOrganisationRequest,
   CreateOrganisationZodSchema,
 } from "@/app/api/_validations/auth/create.organisation.validation";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { withValidation } from "@/lib/zod/validation";
-import { IPaginationResponse } from "@/repositories/types";
-import { organisationService } from "@/services/organisation.service";
-import { Permissions } from "@/types/enums";
-import { createErrorResponse } from "@/utils/api.error.handler";
-import { deleteOrganisation } from "@/utils/propelAuth";
+import { withAuth, withDb, withValidation } from "@/shared/api";
+import * as authService from "@/shared/auth/auth.service";
+import {
+  subscriptionsService,
+  SubscriptionTier,
+} from "@/modules/subscriptions";
+import { Permissions } from "@/shared/auth/types";
+import { createErrorResponse } from "@/shared/api/response.helpers";
 
 /**
  * Get organizations
@@ -22,20 +21,20 @@ import { deleteOrganisation } from "@/utils/propelAuth";
  * @openapi
  */
 export const GET = withAuth(
-  withDB(async (req, {}) => {
+  async (req, {}) => {
     try {
       const { searchParams } = new URL(req.url);
+      const name = searchParams.get("name") || undefined;
+      const domain = searchParams.get("domain") || undefined;
 
-      // Get organizations from our database using the unified query parser
-      const dbOrgs = await organisationService.getOrganisations(searchParams);
+      // Get organizations directly from PropelAuth
+      const orgs = await authService.getOrganisations(name, domain);
 
-      return NextResponse.json<IPaginationResponse<OrganisationResponse>>(dbOrgs, {
-        status: 200,
-      });
+      return NextResponse.json(orgs);
     } catch (error) {
       return createErrorResponse(error);
     }
-  }),
+  },
   {
     requiredPermissions: [Permissions.READ_ORGANISATIONS],
   }
@@ -51,23 +50,36 @@ export const GET = withAuth(
  * @openapi
  */
 export const POST = withAuth(
-  withDB(
-    withValidation(CreateOrganisationZodSchema, async (_req, {}, { user, body }) => {
-      try {
-        const orgData = body as CreateOrganisationRequest;
+  withDb(
+    withValidation(
+      CreateOrganisationZodSchema,
+      async (_req, {}, { user, body }) => {
+        try {
+          const orgData = body as CreateOrganisationRequest;
 
-        // Use the service method which handles:
-        // - Domain-based uniqueness checking
-        // - PropelAuth name conflict resolution with automatic suffixes
-        // - PropelAuth organization creation
-        // - Database storage with proper name mapping
-        const dbResult = await organisationService.createFromPropelAuth(orgData, user.userId);
+          // Create in PropelAuth
+          const propelAuthOrg = await authService.createOrganisation(orgData);
 
-        return NextResponse.json<OrganisationResponse>(dbResult, { status: 201 });
-      } catch (error) {
-        return createErrorResponse(error);
+          if (!propelAuthOrg) {
+            throw new Error("Failed to create organization in PropelAuth");
+          }
+
+          // Create free tier subscription
+          await subscriptionsService.createForOrganization(
+            propelAuthOrg.orgId,
+            SubscriptionTier.FREE,
+            user.userId,
+            14 // 14 day trial
+          );
+
+          return NextResponse.json(propelAuthOrg, {
+            status: 201,
+          });
+        } catch (error) {
+          return createErrorResponse(error);
+        }
       }
-    })
+    )
   ),
   {
     requiredPermissions: [Permissions.READ_USERS],
@@ -83,24 +95,24 @@ export const POST = withAuth(
  * @openapi
  */
 export const DELETE = withAuth(
-  withDB(async (_req, { params }) => {
+  async (_req, { params }) => {
     try {
       const { id } = await params;
 
-      // Delete from PropelAuth first
-      const propelResult = await deleteOrganisation(id);
+      // Delete from PropelAuth
+      const propelResult = await authService.deleteOrganisation(id);
 
       if (!propelResult) {
-        return createErrorResponse(new Error("Failed to delete organization from PropelAuth"));
+        return createErrorResponse(
+          new Error("Failed to delete organization from PropelAuth")
+        );
       }
-
-      // Delete from our database
 
       return new NextResponse(null, { status: 204 });
     } catch (error) {
       return createErrorResponse(error);
     }
-  }),
+  },
   {
     requiredPermissions: [Permissions.WRITE_USERS],
   }

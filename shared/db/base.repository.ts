@@ -1,4 +1,4 @@
-import { FilterQuery, Model, Types, UpdateQuery } from "mongoose";
+import { Document, FilterQuery, Model, Types } from "mongoose";
 import { modelRegistry } from "@/shared/db/model.registry";
 import {
   CloneOperationResult,
@@ -6,8 +6,9 @@ import {
 } from "@/shared/types/clone.types";
 import {
   BulkWriteResult,
+  EntityFilter,
   IEntity,
-  PaginationOptions,
+  QueryOptions,
 } from "@/shared/types/repository.types";
 
 /**
@@ -18,7 +19,7 @@ import {
  * for extensibility and encapsulation, following OOP best practices.
  *
  * Type Parameters:
- *   TEntity - The entity document type (must extend IEntity).
+ *   TEntity - The entity document type (must extend IEntity and Mongoose Document).
  *
  * Usage:
  *   - Extend this class for each entity/model to inherit base CRUD logic.
@@ -36,7 +37,17 @@ import {
  *   - cloneToCollection(targetCollection, options): Clone documents to another collection.
 
  */
-export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
+export class BaseRepository<TEntity extends IEntity<Types.ObjectId> & Document>
+  implements
+    Partial<{
+      create: any;
+      find: any;
+      findOne: any;
+      updateById: any;
+      findWithPopulate: any;
+      count: any;
+    }>
+{
   protected model: Model<TEntity>;
 
   /**
@@ -64,7 +75,7 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @param doc - The entity data to create.
    * @returns The created document instance.
    */
-  public async create(doc: TEntity): Promise<TEntity> {
+  public async create(doc: Partial<TEntity>): Promise<TEntity> {
     try {
       const createdDoc = await this.model.create(doc);
 
@@ -123,11 +134,11 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @returns Array of created document instances.
    */
   public async insertMany(
-    docs: TEntity[],
+    docs: Partial<TEntity>[],
     options: { ordered: boolean } = { ordered: false }
   ): Promise<TEntity[]> {
-    const createdDocs = await this.model.insertMany(docs, options);
-    return createdDocs as TEntity[];
+    const createdDocs = await this.model.insertMany(docs as any[], options);
+    return createdDocs as unknown as TEntity[];
   }
 
   /**
@@ -140,7 +151,7 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @returns Array of upserted document instances.
    */
   public async bulkWrite(
-    docs: TEntity[],
+    docs: Partial<TEntity>[],
     matchField: keyof TEntity | (keyof TEntity)[] = "_id" as keyof TEntity,
     options: { ordered: boolean } = { ordered: false }
   ): Promise<BulkWriteResult<TEntity>> {
@@ -225,7 +236,7 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @param doc - Entity data to upsert.
    * @returns The upserted document instance.
    */
-  public async upsert(doc: TEntity): Promise<TEntity> {
+  public async upsert(doc: Partial<TEntity>): Promise<TEntity> {
     // If document has an _id, try to update existing document
     if (doc._id) {
       const result = await this.model.findOneAndUpdate(
@@ -251,12 +262,12 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @returns A tuple: [array of found documents, total count].
    */
   public async find(
-    filter: FilterQuery<TEntity> = {},
-    options: PaginationOptions = {}
+    filter: EntityFilter<TEntity> = {},
+    options: QueryOptions = {}
   ): Promise<[TEntity[], number]> {
     const { sort, skip, limit } = options;
 
-    let query = this.model.find(this.withNotDeleted(filter));
+    let query = this.model.find(this.withNotDeleted(filter as any));
     if (sort) query = query.sort(sort);
     if (skip) query = query.skip(skip);
     if (limit) query = query.limit(limit);
@@ -264,7 +275,7 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
     // Run both queries in parallel for efficiency
     const [docs, count] = await Promise.all([
       query.exec() as Promise<TEntity[]>,
-      this.model.countDocuments(this.withNotDeleted(filter)).exec(),
+      this.model.countDocuments(this.withNotDeleted(filter as any)).exec(),
     ]);
 
     return [docs, count];
@@ -277,13 +288,13 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @returns A tuple: [array of found documents, total count].
    */
   public async findDeleted(
-    filter: FilterQuery<TEntity> = {},
-    options: PaginationOptions = {}
+    filter: EntityFilter<TEntity> = {},
+    options: QueryOptions = {}
   ): Promise<[TEntity[], number]> {
     const { sort, skip, limit } = options;
 
     // Explicitly filter for deleted records only
-    const deletedFilter = { ...filter, is_deleted: true };
+    const deletedFilter = { ...filter, is_deleted: true } as any;
 
     let query = this.model.find(deletedFilter);
     if (sort) query = query.sort(sort);
@@ -304,9 +315,9 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @param filter - Mongoose filter query.
    * @returns The found document or null if not found.
    */
-  public async findOne(filter: FilterQuery<TEntity>): Promise<TEntity | null> {
+  public async findOne(filter: EntityFilter<TEntity>): Promise<TEntity | null> {
     const found = (await this.model
-      .findOne(this.withNotDeleted(filter))
+      .findOne(this.withNotDeleted(filter as any))
       .exec()) as TEntity | null;
 
     return found;
@@ -314,10 +325,10 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
 
   /**
    * Find a single non-deleted document by its MongoDB ObjectId.
-   * @param id - The document's ObjectId as a string.
+   * @param id - The document's ObjectId as a string or Types.ObjectId.
    * @returns The found document or null if not found/invalid.
    */
-  public async findById(id: string): Promise<TEntity | null> {
+  public async findById(id: Types.ObjectId | string): Promise<TEntity | null> {
     const found = (await this.model
       .findOne(this.withNotDeleted({ _id: id } as any))
       .exec()) as TEntity | null;
@@ -327,12 +338,12 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
 
   /**
    * Find a single non-deleted document by its MongoDB ObjectId with populate support.
-   * @param id - The document's ObjectId as a string.
+   * @param id - The document's ObjectId as a string or Types.ObjectId.
    * @param populateOptions - Mongoose populate options (path, select, populate nested).
    * @returns The found document with populated fields or null if not found/invalid.
    */
   public async findByIdWithPopulate(
-    id: string,
+    id: Types.ObjectId | string,
     populateOptions: any | any[]
   ): Promise<TEntity | null> {
     const found = (await this.model
@@ -351,12 +362,12 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @returns Array of populated documents.
    */
   public async findWithPopulate(
-    filter: FilterQuery<TEntity>,
+    filter: EntityFilter<TEntity>,
     populateOptions: any | any[],
-    options: PaginationOptions = {}
+    options: QueryOptions = {}
   ): Promise<TEntity[]> {
     const populatedDocs = await this.model
-      .find(this.withNotDeleted(filter), null, options)
+      .find(this.withNotDeleted(filter as any), null, options as any)
       .populate(populateOptions)
       .exec();
 
@@ -365,13 +376,13 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
 
   /**
    * Update a non-deleted document by its ID.
-   * @param id - The document's ObjectId as a string.
-   * @param update - The update payload (Mongoose UpdateQuery).
+   * @param id - The document's ObjectId as a string or Types.ObjectId.
+   * @param update - The update payload (Partial entity or Mongoose UpdateQuery).
    * @returns The updated document or null if not found/invalid.
    */
   public async updateById(
-    id: string,
-    update: UpdateQuery<TEntity>
+    id: Types.ObjectId | string,
+    update: Partial<TEntity>
   ): Promise<TEntity | null> {
     const updated = (await this.model
       .findOneAndUpdate(
@@ -389,14 +400,14 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
 
   /**
    * Update a non-deleted document by its ID with array filters support.
-   * @param id - The document's ObjectId as a string.
-   * @param update - The update payload (Mongoose UpdateQuery).
+   * @param id - The document's ObjectId as a string or Types.ObjectId.
+   * @param update - The update payload (Partial entity or Mongoose UpdateQuery).
    * @param arrayFilters - Optional array filters for positional updates.
    * @returns The updated document or null if not found/invalid.
    */
   public async updateByIdWithArrayFilters(
-    id: string,
-    update: UpdateQuery<TEntity>,
+    id: Types.ObjectId | string,
+    update: Partial<TEntity>,
     arrayFilters?: any[]
   ): Promise<TEntity | null> {
     const options: any = {
@@ -421,10 +432,12 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
 
   /**
    * Soft-delete a document by its ID (sets is_deleted=true).
-   * @param id - The document's ObjectId as a string.
+   * @param id - The document's ObjectId as a string or Types.ObjectId.
    * @returns The soft-deleted document or null if not found/invalid.
    */
-  public async softDelete(id: string): Promise<TEntity | null> {
+  public async softDelete(
+    id: Types.ObjectId | string
+  ): Promise<TEntity | null> {
     const deleted = (await this.model
       .findOneAndUpdate(
         this.withNotDeleted({ _id: id } as any),
@@ -443,16 +456,16 @@ export class BaseRepository<TEntity extends IEntity<Types.ObjectId>> {
    * @param filter - Mongoose filter query.
    * @returns The count of matching documents.
    */
-  public async count(filter: FilterQuery<TEntity> = {}): Promise<number> {
-    return this.model.countDocuments(this.withNotDeleted(filter)).exec();
+  public async count(filter: EntityFilter<TEntity> = {}): Promise<number> {
+    return this.model.countDocuments(this.withNotDeleted(filter as any)).exec();
   }
 
   /**
    * Validate if a string is a valid MongoDB ObjectId.
-   * @param id - The string to validate.
+   * @param id - The id to validate.
    * @returns True if valid, false otherwise.
    */
-  public validateId(id: string): boolean {
+  public validateId(id: any): boolean {
     return Types.ObjectId.isValid(id);
   }
 

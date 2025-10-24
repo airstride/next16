@@ -14,7 +14,7 @@ This guide explains how to use the HOFs (Higher-Order Functions) for building ty
 ## Quick Start
 
 ```typescript
-import { withAuth, withDB, withValidation, successResponse } from "@/shared/api";
+import { withAuth, withDb, withValidation, successResponse } from "@/shared/api";
 import { z } from "zod";
 
 const createUserSchema = z.object({
@@ -23,7 +23,7 @@ const createUserSchema = z.object({
 });
 
 export const POST = withAuth(
-  withDB(
+  withDb(
     withValidation(createUserSchema, async (req, ctx, { auth, body }) => {
       // auth.userId, auth.activeOrgId, auth.user are available
       // body is fully typed and validated
@@ -115,7 +115,7 @@ type PermissionConfig = {
 };
 ```
 
-### `withDB`
+### `withDb`
 
 Ensures database connection before handler execution.
 
@@ -129,10 +129,10 @@ Ensures database connection before handler execution.
 **Usage:**
 
 ```typescript
-import { withAuth, withDB } from "@/shared/api";
+import { withAuth, withDb } from "@/shared/api";
 
 export const GET = withAuth(
-  withDB(async (req, ctx, { auth }) => {
+  withDb(async (req, ctx, { auth }) => {
     // Database is guaranteed to be connected
     const users = await UserModel.find({ org_id: auth.activeOrgId });
     return successResponse({ users });
@@ -155,7 +155,7 @@ Validates request body using Zod schemas.
 **Usage:**
 
 ```typescript
-import { withAuth, withDB, withValidation } from "@/shared/api";
+import { withAuth, withDb, withValidation } from "@/shared/api";
 import { z } from "zod";
 
 const createProjectSchema = z.object({
@@ -168,7 +168,7 @@ const createProjectSchema = z.object({
 });
 
 export const POST = withAuth(
-  withDB(
+  withDb(
     withValidation(createProjectSchema, async (req, ctx, { auth, body }) => {
       // body is fully typed as z.infer<typeof createProjectSchema>
       const project = await ProjectService.create(auth.userId, body, auth.activeOrgId);
@@ -191,7 +191,7 @@ Validates PATCH requests with support for JSON Patch (RFC 6902).
 **Usage:**
 
 ```typescript
-import { withAuth, withDB, withPatchValidation } from "@/shared/api";
+import { withAuth, withDb, withPatchValidation } from "@/shared/api";
 import { z } from "zod";
 
 const updateProjectSchema = z
@@ -206,7 +206,7 @@ const updateProjectSchema = z
   .partial(); // Allow partial updates
 
 export const PATCH = withAuth(
-  withDB(
+  withDb(
     withPatchValidation(updateProjectSchema, async (req, ctx, { auth, body }) => {
       const params = await ctx.params;
       const project = await ProjectService.updateById(params.id, auth.userId, body);
@@ -233,9 +233,9 @@ export const PATCH = withAuth(
 HOFs are designed to be composed together. Apply them from right to left (inner to outer):
 
 ```typescript
-// Order: withAuth → withDB → withValidation → handler
+// Order: withAuth → withDb → withValidation → handler
 export const POST = withAuth(
-  withDB(
+  withDb(
     withValidation(schema, async (req, ctx, { auth, body }) => {
       // Handler
     })
@@ -248,9 +248,9 @@ export const POST = withAuth(
 For cleaner syntax, use the `compose` helper:
 
 ```typescript
-import { compose, withAuth, withDB, withValidation } from "@/shared/api";
+import { compose, withAuth, withDb, withValidation } from "@/shared/api";
 
-export const POST = compose(withAuth, withDB, withValidation(schema))(
+export const POST = compose(withAuth, withDb, withValidation(schema))(
   async (req, ctx, { auth, body }) => {
     // Handler
   }
@@ -260,7 +260,7 @@ export const POST = compose(withAuth, withDB, withValidation(schema))(
 ### Execution Order
 
 1. **withAuth** - Validates authentication, extracts user
-2. **withDB** - Ensures database connection
+2. **withDb** - Ensures database connection
 3. **withValidation** - Validates request body
 4. **Handler** - Your business logic
 
@@ -310,10 +310,10 @@ return errorResponse("Something went wrong", 500);
 
 ```typescript
 // ✅ Good
-export const POST = withAuth(withDB(withValidation(schema, handler)));
+export const POST = withAuth(withDb(withValidation(schema, handler)));
 
 // ❌ Bad
-export const POST = withDB(withAuth(withValidation(schema, handler)));
+export const POST = withDb(withAuth(withValidation(schema, handler)));
 ```
 
 ### 2. **Order Matters**
@@ -321,7 +321,7 @@ export const POST = withDB(withAuth(withValidation(schema, handler)));
 Apply HOFs in the order they should execute:
 
 1. Authentication (`withAuth`)
-2. Database (`withDB`)
+2. Database (`withDb`)
 3. Validation (`withValidation`)
 4. Handler
 
@@ -346,12 +346,12 @@ Always validate request bodies with `withValidation`:
 ```typescript
 // ✅ Good
 export const POST = withAuth(
-  withDB(withValidation(schema, handler))
+  withDb(withValidation(schema, handler))
 );
 
 // ❌ Bad - no validation
 export const POST = withAuth(
-  withDB(async (req, ctx, { auth }) => {
+  withDb(async (req, ctx, { auth }) => {
     const body = await req.json(); // Unsafe!
     // ...
   })
@@ -398,7 +398,7 @@ Errors bubble up through the HOF chain. Use try-catch for specific error handlin
 
 ```typescript
 export const POST = withAuth(
-  withDB(
+  withDb(
     withValidation(schema, async (req, ctx, { auth, body }) => {
       try {
         const user = await UserService.create(auth.userId, body, auth.activeOrgId);
@@ -419,10 +419,10 @@ export const POST = withAuth(
 ### Basic GET Endpoint
 
 ```typescript
-import { withAuth, withDB, successResponse } from "@/shared/api";
+import { withAuth, withDb, successResponse } from "@/shared/api";
 
 export const GET = withAuth(
-  withDB(async (req, ctx, { auth }) => {
+  withDb(async (req, ctx, { auth }) => {
     const params = await ctx.params;
     const user = await UserService.findById(params.id);
 
@@ -438,7 +438,7 @@ export const GET = withAuth(
 ### POST with Validation
 
 ```typescript
-import { withAuth, withDB, withValidation, createdResponse } from "@/shared/api";
+import { withAuth, withDb, withValidation, createdResponse } from "@/shared/api";
 import { z } from "zod";
 
 const createUserSchema = z.object({
@@ -448,7 +448,7 @@ const createUserSchema = z.object({
 });
 
 export const POST = withAuth(
-  withDB(
+  withDb(
     withValidation(createUserSchema, async (req, ctx, { auth, body }) => {
       const user = await UserService.create(auth.userId, body, auth.activeOrgId);
       return createdResponse({ user });
@@ -461,7 +461,7 @@ export const POST = withAuth(
 ### PATCH with Validation
 
 ```typescript
-import { withAuth, withDB, withPatchValidation, successResponse } from "@/shared/api";
+import { withAuth, withDb, withPatchValidation, successResponse } from "@/shared/api";
 import { z } from "zod";
 
 const updateUserSchema = z
@@ -472,7 +472,7 @@ const updateUserSchema = z
   .partial();
 
 export const PATCH = withAuth(
-  withDB(
+  withDb(
     withPatchValidation(updateUserSchema, async (req, ctx, { auth, body }) => {
       const params = await ctx.params;
       const user = await UserService.updateById(params.id, auth.userId, body);
@@ -490,10 +490,10 @@ export const PATCH = withAuth(
 ### DELETE Endpoint
 
 ```typescript
-import { withAuth, withDB, noContentResponse, notFoundResponse } from "@/shared/api";
+import { withAuth, withDb, noContentResponse, notFoundResponse } from "@/shared/api";
 
 export const DELETE = withAuth(
-  withDB(async (req, ctx, { auth }) => {
+  withDb(async (req, ctx, { auth }) => {
     const params = await ctx.params;
     const user = await UserService.deleteById(params.id);
 
@@ -510,11 +510,11 @@ export const DELETE = withAuth(
 ### List with Pagination
 
 ```typescript
-import { withAuth, withDB, paginatedResponse } from "@/shared/api";
+import { withAuth, withDb, paginatedResponse } from "@/shared/api";
 import { UniversalQueryParser } from "@/shared/utils/query.parser";
 
 export const GET = withAuth(
-  withDB(async (req, ctx, { auth }) => {
+  withDb(async (req, ctx, { auth }) => {
     const searchParams = new URL(req.url).searchParams;
 
     // Use query parser for filtering, sorting, pagination

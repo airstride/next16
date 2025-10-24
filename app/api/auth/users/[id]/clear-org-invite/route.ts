@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { withUserValidation } from "@/hooks/withUserValidation";
-import { NotFoundError } from "@/types/errors";
-import { createErrorResponse } from "@/utils/error.response.builders";
-import { getUser, updateUser } from "@/utils/propelAuth";
+import { withAuth } from "@/shared/api/hofs/withAuth";
+import { withUserValidation } from "@/shared/api/hofs/withUserValidation";
+import { withDb } from "@/shared/api";
+import { NotFoundError } from "@/shared/utils/errors";
+import { createErrorResponse } from "@/shared/api/response.helpers";
+import { getUser, updateUser } from "@/shared/auth/auth.service";
 
 /**
  * Clear org_invite metadata after successful org switch
@@ -14,7 +14,7 @@ import { getUser, updateUser } from "@/utils/propelAuth";
  * @openapi
  */
 export const POST = withAuth(
-  withDB(
+  withDb(
     withUserValidation(async (_req: NextRequest, {}, { user }) => {
       try {
         // Get current user to preserve other metadata
@@ -33,7 +33,9 @@ export const POST = withAuth(
           metadata: updatedMetadata,
         });
 
-        return NextResponse.json({ message: "org_invite_cleared_successfully" });
+        return NextResponse.json({
+          message: "org_invite_cleared_successfully",
+        });
       } catch (error) {
         return createErrorResponse(error);
       }

@@ -1,30 +1,40 @@
 /**
  * Repository Types
  *
- * Types specific to the repository layer (database operations)
- * Separated from API and validation concerns for proper boundaries
+ * Database-agnostic types for the repository layer.
+ * These types do NOT import or depend on any specific database library.
+ * This allows switching between MongoDB, SQL, or any other database.
  */
+
+/**
+ * DatabaseId - Generic identifier type
+ * Can be MongoDB ObjectId, SQL integer, UUID, or string
+ * This is intentionally flexible to support any database
+ */
+export type DatabaseId = string | number | object;
 
 /**
  * IEntity
  *
- * Base interface for all database entities (documents).
+ * Base interface for all database entities.
  * Includes standard audit fields and soft-delete support.
  *
- * This interface abstracts away the implementation details (Mongoose, etc.)
- * and focuses on the domain concept of a persisted entity.
+ * This interface is COMPLETELY database-agnostic - it works with:
+ * - MongoDB (ObjectId)
+ * - PostgreSQL/MySQL (integer or UUID)
+ * - Any other database
  *
- * @template TId - The type of the entity's identifier (ObjectId, string, etc.)
+ * @template TId - The type of the entity's identifier
  *
- * @property _id - Unique identifier for the entity
+ * @property _id - Unique identifier (flexible type for any DB)
  * @property created_by - ID of the user who created this entity
  * @property updated_by - ID of the user who last updated this entity
  * @property created_at - Timestamp when the entity was created
  * @property updated_at - Timestamp when the entity was last updated
- * @property is_deleted - Soft-delete flag (used by BaseRepository)
+ * @property is_deleted - Soft-delete flag
  * @property created_by_propel_auth_org_id - Organization ID from PropelAuth
  */
-export interface IEntity<TId = unknown> {
+export interface IEntity<TId = DatabaseId> {
   _id: TId;
   created_by: string;
   updated_by: string;

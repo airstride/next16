@@ -128,7 +128,7 @@
   - [x] Support role-based access control (requiredRoles, anyRoles)
   - [x] Custom permission check function support
 
-- [x] Create `withDB` HOF in `shared/api/with-db.ts`
+- [x] Create `withDb` HOF in `shared/api/with-db.ts`
   - [x] Ensure database connection before route handler executes
   - [x] Call `DatabaseService.connect()` automatically
   - [x] Handle connection errors gracefully
@@ -151,7 +151,7 @@
 - [x] Create HOF composition helper in `shared/api/with-auth.ts`
   - [x] `compose()` - Combine multiple HOFs
   - [x] Type-safe middleware composition
-  - [x] Example: `compose(withAuth, withDB, withValidation(schema))`
+  - [x] Example: `compose(withAuth, withDb, withValidation(schema))`
   - [x] Execution order: right-to-left (standard function composition)
   - [x] Error handling at each layer (bubbles up)
 
@@ -193,49 +193,72 @@
   - [x] `PermissionConfig` - Permission configuration for access control
   - [x] All types properly exported from `shared/types/index.ts`
 
-## Phase v0.1 — Strategy Generator (~2 weeks)
+#### Database agnostic repository pattern
+  ....
+
+## Phase v0.1 — Strategy Generator
 **Goal:** Generate first 30-day plan (no automation)
 
 ### Projects Module (Context Ingestion)
-- [ ] Define Mongoose schema in `modules/projects/schema.ts`
-  - [ ] Company profile fields (name, industry, stage, website)
-  - [ ] Product description
-  - [ ] ICP (ideal customer profile)
-  - [ ] Business goals (traffic, leads, revenue targets)
-  - [ ] Existing clients and revenue data
-  - [ ] Brand voice guidelines
-  - [ ] Current campaigns
-  - [ ] Marketing assets (URLs, social handles)
-  - [ ] Research metadata (researchStatus, researchedAt, researchSource)
-- [ ] Create Zod validation schemas in `modules/projects/validation.ts`
-  - [ ] Website URL input validation (for AI research trigger)
-  - [ ] AI-extracted context validation schema
-  - [ ] Manual context override validation
-  - [ ] Update context validation
-  - [ ] Response schemas
-- [ ] Implement AI research service in `modules/projects/service.ts`
-  - [ ] `researchWebsite(websiteUrl)` - Use ai-sdk with web search to research company
-    - [ ] Use `generateStructuredOutputWithWebSearch()` from ai-sdk
-    - [ ] Extract company name, industry, stage, product description
-    - [ ] Identify potential ICP based on website content
-    - [ ] Extract social handles and marketing assets
-    - [ ] Analyze brand voice from website content
-    - [ ] Infer business goals from website messaging
-  - [ ] `createProjectFromWebsite(websiteUrl, userId)` - Research + create project
-    - [ ] Call `researchWebsite()` to get AI-extracted context
-    - [ ] Store extracted data in Projects schema
-    - [ ] Mark as AI-researched with metadata
-    - [ ] Allow manual refinement later
-  - [ ] `createProject(data)` - Create project with manual data
-  - [ ] `getProjectContext(projectId)` - Retrieve project data
-  - [ ] `updateContext(projectId, updates)` - Update project details
-  - [ ] `refineContext(projectId, refinements)` - User refines AI-extracted data
-- [ ] Build API route in `app/api/projects/route.ts`
-  - [ ] POST /api/projects/research - Submit website URL for AI research
-  - [ ] POST /api/projects - Create project (manual or from research)
-  - [ ] GET /api/projects/:id - Get project
-  - [ ] PATCH /api/projects/:id - Update project
-  - [ ] POST /api/projects/:id/refine - Refine AI-extracted context
+
+**Domain Model Architecture:**
+- **Project** = Persistent company/product context (the "truth file")
+  - ONE per company/product
+  - Company profile, product, ICP, baseline brand voice, default goals
+  - Long-lived, rarely changes
+- **Campaign** = Separate module (to be implemented later)
+  - Will be a standalone module in `modules/campaigns/`
+  - Multiple campaigns per project (via project_id reference)
+  - Each with specific goals, voice overrides, date ranges
+  - Examples: product launch, feature release, SEO content campaign
+
+For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a separate module when needed.
+
+- [x] Define Mongoose schema in `modules/projects/schema.ts`
+  - [x] Company profile fields (name, industry, stage, website)
+  - [x] Product description
+  - [x] ICP (ideal customer profile)
+  - [x] Business goals (traffic, leads, revenue targets)
+  - [x] Existing clients and revenue data
+  - [x] Brand voice guidelines
+  - [x] Current campaigns
+  - [x] Marketing assets (URLs, social handles)
+  - [x] Research metadata (researchStatus, researchedAt, researchSource)
+- [x] Create Zod validation schemas in `modules/projects/validation.ts`
+  - [x] Website URL input validation (for AI research trigger)
+  - [x] AI-extracted context validation schema
+  - [x] Manual context override validation
+  - [x] Update context validation
+  - [x] Response schemas
+- [x] Implement AI research service in `modules/projects/service.ts`
+  - [x] `researchWebsite(websiteUrl)` - Use ai-sdk with web search to research company
+    - [x] Use `generateStructuredOutputWithWebSearch()` from ai-sdk
+    - [x] Extract company name, industry, stage, product description
+    - [x] Identify potential ICP based on website content
+    - [x] Extract social handles and marketing assets
+    - [x] Analyze brand voice from website content
+    - [x] Infer business goals from website messaging
+  - [x] `createProjectFromWebsite(websiteUrl, userId)` - Research + create project
+    - [x] Call `researchWebsite()` to get AI-extracted context
+    - [x] Store extracted data in Projects schema
+    - [x] Mark as AI-researched with metadata
+    - [x] Allow manual refinement later
+  - [x] `createProject(data)` - Create project with manual data
+  - [x] `getProjectContext(projectId)` - Retrieve project data
+  - [x] `updateContext(projectId, updates)` - Update project details
+  - [x] `refineContext(projectId, refinements)` - User refines AI-extracted data
+- [x] Build API routes for projects module (lightweight pattern)
+  - [x] GET /api/projects - List all projects for organization
+  - [x] POST /api/projects - Create project manually
+  - [x] POST /api/projects/research - Submit website URL for AI research
+  - [x] GET /api/projects/:id - Get project by ID
+  - [x] PATCH /api/projects/:id - Update project
+  - [x] DELETE /api/projects/:id - Delete project (soft delete)
+  - [x] POST /api/projects/:id/refine - Refine AI-extracted context
+  - [x] All routes use lightweight pattern: withAuth → withDb → withValidation → service call
+  - [x] All routes use createErrorResponse helper for consistent error handling
+  - [x] All routes include proper ownership verification for user/org access control
+  - [x] Fixed nativeEnum usage to z.enum with array values per project rules
 
 ### Strategy Module (Plan Generation)
 - [ ] Define Mongoose schema in `modules/strategy/schema.ts`
@@ -295,7 +318,7 @@
 
 ---
 
-## Phase v0.2 — Task Engine (~3 weeks)
+## Phase v0.2 — Task Engine 
 **Goal:** Event-driven architecture foundation
 
 ### Inngest Setup
@@ -442,7 +465,7 @@
 
 ---
 
-## Phase v0.3 — Execution Agents (~3 weeks)
+## Phase v0.3 — Execution Agents 
 **Goal:** Human-in-the-loop execution
 
 ### Content Agent

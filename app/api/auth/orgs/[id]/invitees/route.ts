@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { withAuth } from "@/hooks/withAuth";
-import { withOrgValidation } from "@/hooks/withOrgValidation";
-import { organisationService } from "@/services/organisation.service";
-import { Permissions } from "@/types/enums";
-import { createErrorResponse } from "@/utils/api.error.handler";
-import { objectToSnakeCase } from "@/utils/case.converter";
-import { getInvitesByOrg } from "@/utils/propelAuth";
+import { withAuth } from "@/shared/api";
+import { withOrgValidation } from "@/shared/api/hofs/withOrgValidation";
+import { Permissions } from "@/shared/auth/types";
+import { createErrorResponse } from "@/shared/api/response.helpers";
+import { objectToSnakeCase } from "@/shared/utils/case.converter";
+import { getInvitesByOrg } from "@/shared/auth/auth.service";
 
 /**
  * Get all invites in an organization
  * @description Retrieves all invites belonging to the specified organization
- * @params id - Organization ID from the route parameter
+ * @params id - Organization ID (PropelAuth org ID)
  * @query include_orgs - Whether to include organization details in the response (default: false)
  * @query page - Page number (default: 1)
  * @query limit - Number of items per page (default: 10)
@@ -19,7 +18,7 @@ import { getInvitesByOrg } from "@/utils/propelAuth";
  * @openapi
  */
 export const GET = withAuth(
-  withOrgValidation(async (req, _params, { orgId, activeOrgId }) => {
+  withOrgValidation(async (req, _params, { orgId }) => {
     try {
       const url = new URL(req.url);
       const page = parseInt(url.searchParams.get("pageNumber") || "1");
@@ -28,13 +27,9 @@ export const GET = withAuth(
       // PropelAuth uses 0-based page numbering, so convert from 1-based
       const pageNumber = page - 1;
 
-      const org = await organisationService.find(orgId, activeOrgId);
-      if (!org) {
-        return createErrorResponse(new Error("Organisation not found"));
-      }
-
+      // orgId is already the PropelAuth org ID
       const result = await getInvitesByOrg({
-        orgId: org.propel_auth_org_id,
+        orgId,
         pageNumber,
         pageSize,
       });
@@ -47,7 +42,9 @@ export const GET = withAuth(
       }
 
       // Transform PropelAuth response to IPaginationResponse format with snake_case
-      const transformedInvites = result.invites.map((invite) => objectToSnakeCase(invite));
+      const transformedInvites = result.invites.map((invite) =>
+        objectToSnakeCase(invite)
+      );
       const pageCount = Math.ceil(result.totalInvites / pageSize);
 
       return NextResponse.json({

@@ -28,7 +28,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.removeUnused": "explicit",
-    //"source.removeUnusedImports": "explicit",
+    "source.removeUnusedImports": "explicit",
     "source.organizeImports.eslint": "explicit"
   },
   "editor.formatOnSave": true,

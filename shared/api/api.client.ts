@@ -186,7 +186,7 @@ async function doFetch<Type>({
  */
 export async function get<Type>(
   url: FetchType["url"],
-  headers?: object,
+  headers?: Record<string, string>,
   cache?: RequestCache,
   isStream?: boolean
 ): Promise<Type | ReadableStream<Uint8Array> | null> {
@@ -247,7 +247,7 @@ export async function put<Type>(
 export async function post<Type>(
   url: FetchType["url"],
   body: FetchType["body"],
-  headers?: object | null,
+  headers?: Record<string, string>,
   isStream?: boolean
 ): Promise<Type | ReadableStream<Uint8Array> | null> {
   return doFetch<Type | ReadableStream<Uint8Array> | null>({
@@ -255,7 +255,7 @@ export async function post<Type>(
     method: "POST",
     body,
     isStream,
-    headers: headers || undefined,
+    headers,
   });
 }
 

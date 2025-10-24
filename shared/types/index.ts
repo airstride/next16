@@ -7,6 +7,7 @@
 // Repository Types
 export type {
   IEntity,
+  DatabaseId,
   PaginationOptions,
   SortOptions,
   EntityFilter,

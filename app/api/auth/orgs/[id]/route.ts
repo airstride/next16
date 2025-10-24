@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import {
   UpdateOrganisationRequest,
-  UpdateOrganisationZodSchema,
-} from "@/app/api/_validations/auth/create.organisation.validation";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { withOrgValidation } from "@/hooks/withOrgValidation";
-import { withPatchValidation } from "@/lib/zod/validation";
-import { organisationService } from "@/services/organisation.service";
-import { Permissions } from "@/types/enums";
-import { NotFoundError } from "@/types/errors";
-import { createErrorResponse } from "@/utils/api.error.handler";
+  UpdateOrganisationSchema,
+} from "@/app/api/_validations/organisations/organisation.validation";
+import { withAuth } from "@/shared/api/hofs/withAuth";
+import { withOrgValidation } from "@/shared/api/hofs/withOrgValidation";
+import { withPatchValidation } from "@/shared/api/hofs/withValidation";
+import {
+  getOrganisation,
+  updateOrganisation,
+  deleteOrganisation,
+} from "@/shared/auth/auth.service";
+import { Permissions } from "@/shared/auth/types";
+import { NotFoundError } from "@/shared/utils/errors";
+import { createErrorResponse } from "@/shared/api/response.helpers";
 
 /**
  * Get organisation by ID
@@ -20,17 +23,20 @@ import { createErrorResponse } from "@/utils/api.error.handler";
  * @openapi
  */
 export const GET = withAuth(
-  withDB(
-    withOrgValidation(async (_req, _params, { orgId, activeOrgId }) => {
-      try {
-        const organisation = await organisationService.find(orgId, activeOrgId);
+  withOrgValidation(async (_req, _params, { orgId }) => {
+    try {
+      // Get organization from PropelAuth
+      const organisation = await getOrganisation(orgId);
 
-        return NextResponse.json(organisation);
-      } catch (error) {
-        return createErrorResponse(error);
+      if (!organisation) {
+        throw new NotFoundError("Organization not found");
       }
-    })
-  ),
+
+      return NextResponse.json(organisation);
+    } catch (error) {
+      return createErrorResponse(error);
+    }
+  }),
   {
     requiredPermissions: [Permissions.READ_ORGANISATIONS],
   }
@@ -46,29 +52,26 @@ export const GET = withAuth(
  * @openapi
  */
 export const PATCH = withAuth(
-  withDB(
-    withOrgValidation(
-      withPatchValidation(
-        UpdateOrganisationZodSchema,
-        async (_req, _params, { user, body, orgId, activeOrgId }) => {
-          try {
-            const dbResult = await organisationService.update(
-              orgId,
-              activeOrgId,
-              user.userId,
-              body as UpdateOrganisationRequest
-            );
+  withOrgValidation(
+    withPatchValidation(
+      UpdateOrganisationSchema,
+      async (_req, _params, { body, orgId }) => {
+        try {
+          // Update organization in PropelAuth
+          const updated = await updateOrganisation(
+            orgId,
+            body as UpdateOrganisationRequest
+          );
 
-            if (!dbResult) {
-              throw new NotFoundError("Organisation not found in database");
-            }
-
-            return NextResponse.json(dbResult, { status: 200 });
-          } catch (error) {
-            return createErrorResponse(error);
+          if (!updated) {
+            throw new NotFoundError("Organisation not found");
           }
+
+          return NextResponse.json(updated, { status: 200 });
+        } catch (error) {
+          return createErrorResponse(error);
         }
-      )
+      }
     )
   ),
   {
@@ -84,17 +87,16 @@ export const PATCH = withAuth(
  * @openapi
  */
 export const DELETE = withAuth(
-  withDB(
-    withOrgValidation(async (_req, _params, { orgId, activeOrgId }) => {
-      try {
-        await organisationService.delete(orgId, activeOrgId);
+  withOrgValidation(async (_req, _params, { orgId }) => {
+    try {
+      // Delete organization from PropelAuth
+      await deleteOrganisation(orgId);
 
-        return new NextResponse(null, { status: 204 });
-      } catch (error) {
-        return createErrorResponse(error);
-      }
-    })
-  ),
+      return new NextResponse(null, { status: 204 });
+    } catch (error) {
+      return createErrorResponse(error);
+    }
+  }),
   {
     requiredPermissions: [Permissions.WRITE_ORGANISATIONS],
   }

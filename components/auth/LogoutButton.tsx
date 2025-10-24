@@ -1,7 +1,7 @@
 import { IconLogout } from "@tabler/icons-react";
 import { Box, Button, MenuItem } from "@mantine/core";
-import { onLogoutConfirmation } from "@/components/modals/LogoutConfirmation";
-import { ICON_SIZE_SM } from "@/utils/constants";
+import { onLogoutConfirmation } from "@/components/auth/LogoutConfirmation";
+import { ICON_SIZE_SM } from "@/shared/utils/constants";
 
 export const LogoutButton = () => {
   return (
@@ -26,7 +26,10 @@ export const LogoutButton = () => {
 
 export const LogoutMenuItem = () => {
   return (
-    <MenuItem leftSection={<IconLogout size={ICON_SIZE_SM} />} onClick={onLogoutConfirmation}>
+    <MenuItem
+      leftSection={<IconLogout size={ICON_SIZE_SM} />}
+      onClick={onLogoutConfirmation}
+    >
       Logout
     </MenuItem>
   );

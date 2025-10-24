@@ -8,7 +8,7 @@ export function Unauthorized() {
           401
         </Title>
         <Divider orientation="vertical" />
-        <Text>You're not authorized to access this page.</Text>
+        <Text>You&apos;re not authorized to access this page.</Text>
       </Group>
     </Center>
   );

@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import type { IPaginationResponse, ISuccessResponse } from "@/shared/types";
+import { ErrorHandler } from "@/shared/utils/errors";
 
 /**
  * Create a success response
@@ -151,7 +152,9 @@ export function validationErrorResponse(
  * @param message - Conflict message
  * @returns NextResponse with 409 status
  */
-export function conflictResponse(message: string = "Resource already exists"): NextResponse {
+export function conflictResponse(
+  message: string = "Resource already exists"
+): NextResponse {
   return errorResponse(message, 409);
 }
 
@@ -161,7 +164,9 @@ export function conflictResponse(message: string = "Resource already exists"): N
  * @param data - Created resource data
  * @returns NextResponse with 201 status
  */
-export function createdResponse<T extends ISuccessResponse>(data: T): NextResponse {
+export function createdResponse<T extends ISuccessResponse>(
+  data: T
+): NextResponse {
   return successResponse(data, 201);
 }
 
@@ -174,3 +179,28 @@ export function noContentResponse(): NextResponse {
   return new NextResponse(null, { status: 204 });
 }
 
+/**
+ * Create an error response using ErrorHandler
+ *
+ * Processes the error through the ErrorHandler to provide consistent
+ * error formatting and status codes across all API routes.
+ *
+ * @param error - The error to handle (can be any type)
+ * @returns NextResponse with error data, status, and headers from ErrorHandler
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await someOperation();
+ * } catch (error) {
+ *   return createErrorResponse(error);
+ * }
+ * ```
+ */
+export function createErrorResponse(error: unknown): NextResponse {
+  const response = ErrorHandler.handle(error);
+  return new NextResponse(response.body, {
+    status: response.status,
+    headers: response.headers,
+  });
+}

@@ -1,40 +1,38 @@
 import { NextResponse } from "next/server";
-import { OrganisationResponse } from "@/app/api/_responses/organisation.response";
 import {
   CreateOrganisationRequest,
   CreateOrganisationZodSchema,
 } from "@/app/api/_validations/auth/create.organisation.validation";
-import { withAuth } from "@/hooks/withAuth";
-import { withDB } from "@/hooks/withDB";
-import { withValidation } from "@/lib/zod/validation";
-import { IPaginationResponse } from "@/repositories/types";
-import { organisationService } from "@/services/organisation.service";
-import { Permissions } from "@/types/enums";
-import { createErrorResponse } from "@/utils/api.error.handler";
+import { withAuth, withDb, withValidation } from "@/shared/api";
+import * as authService from "@/shared/auth/auth.service";
+import {
+  subscriptionsService,
+  SubscriptionTier,
+} from "@/modules/subscriptions";
+import { Permissions } from "@/shared/auth/types";
+import { createErrorResponse } from "@/shared/api/response.helpers";
 
 /**
  * Get organizations
- * @description Returns a list of organizations with filtering, searching, and pagination support.
- * @params OrganisationsQuerySchema
- * @response PaginatedResponse<OrganisationResponse>
+ * @description Returns organizations from PropelAuth
  * @auth bearer
  * @openapi
  */
 export const GET = withAuth(
-  withDB(async (req, {}, {}) => {
+  async (req, {}, {}) => {
     try {
       const { searchParams } = new URL(req.url);
+      const name = searchParams.get("name") || undefined;
+      const domain = searchParams.get("domain") || undefined;
 
-      // Get organizations from our database using the unified query parser
-      const dbOrgs = await organisationService.getOrganisations(searchParams);
+      // Get organizations directly from PropelAuth
+      const orgs = await authService.getOrganisations(name, domain);
 
-      return NextResponse.json<IPaginationResponse<OrganisationResponse>>(dbOrgs, {
-        status: 200,
-      });
+      return NextResponse.json(orgs);
     } catch (error) {
       return createErrorResponse(error);
     }
-  }),
+  },
   {
     requiredPermissions: [Permissions.READ_ORGANISATIONS],
   }
@@ -42,25 +40,42 @@ export const GET = withAuth(
 
 /**
  * Create a new organization
- * @description Creates a new organization in PropelAuth and stores additional data in our database.
+ * @description Creates organization in PropelAuth and initializes free tier subscription
  * @body CreateOrganisationZodSchema
- * @response Success message with organization details
+ * @response OrganizationResponse with subscription
  * @auth bearer
  * @openapi
  */
 export const POST = withAuth(
-  withDB(
-    withValidation(CreateOrganisationZodSchema, async (_req, {}, { user, body }) => {
-      try {
-        const result = await organisationService.createFromPropelAuth(
-          body as CreateOrganisationRequest,
-          user.userId
-        );
+  withDb(
+    withValidation(
+      CreateOrganisationZodSchema,
+      async (_req, {}, { user, body }) => {
+        try {
+          const orgData = body as CreateOrganisationRequest;
 
-        return NextResponse.json<OrganisationResponse>(result, { status: 201 });
-      } catch (error) {
-        return createErrorResponse(error);
+          // Create in PropelAuth
+          const propelAuthOrg = await authService.createOrganisation(orgData);
+
+          if (!propelAuthOrg) {
+            throw new Error("Failed to create organization in PropelAuth");
+          }
+
+          // Create free tier subscription for the new org
+          await subscriptionsService.createForOrganization(
+            propelAuthOrg.orgId,
+            SubscriptionTier.FREE,
+            user.userId,
+            14 // 14 day trial
+          );
+
+          return NextResponse.json(propelAuthOrg, {
+            status: 201,
+          });
+        } catch (error) {
+          return createErrorResponse(error);
+        }
       }
-    })
+    )
   )
 );
