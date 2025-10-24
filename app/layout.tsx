@@ -4,6 +4,8 @@ import { Notifications } from "@mantine/notifications";
 import { NavigationProgress } from "@mantine/nprogress";
 import { colorSchemeManager } from "@/components/ui/ColorSchemeToggle";
 import { theme } from "@/shared/utils/theme";
+import AuthWrapper from "@/components/auth/AuthWrapper";
+import GlobalProviders from "@/components/providers/Providers";
 
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
@@ -61,7 +63,12 @@ export default function AppLayout({ children }: { children: any }) {
         <MantineProvider theme={theme} colorSchemeManager={colorSchemeManager}>
           <Notifications position="top-right" />
           <NavigationProgress />
-          {children}
+          <AuthWrapper
+            authUrl={process.env.NEXT_PUBLIC_AUTH_URL!}
+            redirectUrl="/"
+          >
+            <GlobalProviders>{children}</GlobalProviders>
+          </AuthWrapper>
         </MantineProvider>
       </body>
     </html>

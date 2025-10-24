@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import AuthWrapper from "@/components/auth/AuthWrapper";
-import GlobalProviders from "@/components/providers/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,9 +11,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <AuthWrapper authUrl={process.env.NEXT_PUBLIC_AUTH_URL!} redirectUrl="/">
-      <GlobalProviders>{children}</GlobalProviders>
-    </AuthWrapper>
-  );
+  return <>{children}</>;
 }

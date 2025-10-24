@@ -1,6 +1,10 @@
 "use client";
 
-import { AuthProvider, useRedirectFunctions, useUser } from "@propelauth/nextjs/client";
+import {
+  AuthProvider,
+  useRedirectFunctions,
+  useUser,
+} from "@propelauth/nextjs/client";
 import { LoadingOverlay } from "@mantine/core";
 
 type Props = {
