@@ -8,8 +8,8 @@ import {
   useUser,
   UseUserLoggedIn,
 } from "@propelauth/nextjs/client";
-import { useClearOrgInviteFromMetadata } from "@/hooks/reactQuery/users/useUserMutations";
-import { setAccessTokenGetter } from "@/utils/api";
+import { useClearOrgInviteFromMetadata } from "@/shared/query/hooks/users/user.mutations";
+import { setAccessTokenGetter } from "@/shared/api/api.client";
 
 export interface AuthContextType {
   userName: string;
@@ -63,9 +63,13 @@ const generateUserInfo = (userInfo: UseUserLoggedIn): AuthContextType => {
   const organizations =
     userInfo.user
       ?.getOrgs()
-      ?.sort((a: OrgMemberInfo, b: OrgMemberInfo) => a.orgName.localeCompare(b.orgName)) || [];
+      ?.sort((a: OrgMemberInfo, b: OrgMemberInfo) =>
+        a.orgName.localeCompare(b.orgName)
+      ) || [];
 
-  const org = organizations.find((org: OrgMemberInfo) => org.orgId === userInfo.user?.activeOrgId);
+  const org = organizations.find(
+    (org: OrgMemberInfo) => org.orgId === userInfo.user?.activeOrgId
+  );
 
   const organizationName = org?.orgName || "";
   const role = org?.userAssignedRole || "";
@@ -118,7 +122,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => userInfo, [userInfo]);
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

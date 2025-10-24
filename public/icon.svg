@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#2B2D42"/>
+  
+  <!-- Accent circle -->
+  <circle cx="256" cy="256" r="180" fill="#00C6AE" opacity="0.15"/>
+  
+  <!-- Letter G with AI spark -->
+  <path d="M256 128C184.6 128 126 186.6 126 258C126 329.4 184.6 388 256 388C296.2 388 333 372 358 346" stroke="#00C6AE" stroke-width="24" stroke-linecap="round"/>
+  <path d="M256 258H358" stroke="#00C6AE" stroke-width="24" stroke-linecap="round"/>
+  <path d="M358 258V310" stroke="#00C6AE" stroke-width="24" stroke-linecap="round"/>
+  
+  <!-- AI spark decoration -->
+  <path d="M360 140L370 160L390 150L380 170L400 180L380 190L390 210L370 200L360 220L350 200L330 210L340 190L320 180L340 170L330 150L350 160L360 140Z" fill="#00C6AE"/>
+</svg>
+

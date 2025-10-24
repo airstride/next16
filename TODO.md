@@ -169,6 +169,20 @@
   - [x] `noContentResponse()` - 204 No Content responses
   - [x] Consistent JSON structure across all endpoints
 
+#### Client-Side API Utilities
+- [x] Create client API fetch wrapper in `shared/api/api.client.ts`
+  - [x] Type-safe wrapper around native fetch API
+  - [x] Bearer token authentication with `setAccessTokenGetter()` and `getBearerToken()`
+  - [x] HTTP method helpers: `get()`, `post()`, `put()`, `patch()`, `del()`
+  - [x] Automatic JSON serialization/deserialization
+  - [x] FormData support for file uploads
+  - [x] Streaming response support with `readDataFromStream()`
+  - [x] Enriched error objects with status, data, url, method
+  - [x] `/v2/` prefix for all requests (maps to API routes via next.config.mjs rewrite)
+  - [x] Cache control support for GET requests
+  - [x] Custom headers support
+  - [x] TypeScript generics for response types
+
 #### Type Definitions
 - [x] Update `shared/types/index.ts` with common API types
   - [x] Created `shared/types/api-hof.types.ts` with HOF type definitions

@@ -15,9 +15,7 @@ import { type Model, type Document } from "mongoose";
  */
 class ModelRegistry {
   // Use `any` for Document type to allow any model shape while maintaining Model type safety
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private models = new Map<string, Model<any>>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private lazyLoaders = new Map<string, () => Model<any>>();
 
   /**
@@ -79,7 +77,10 @@ class ModelRegistry {
    * @returns Array of all registered model name strings
    */
   getRegisteredNames(): string[] {
-    return [...Array.from(this.models.keys()), ...Array.from(this.lazyLoaders.keys())];
+    return [
+      ...Array.from(this.models.keys()),
+      ...Array.from(this.lazyLoaders.keys()),
+    ];
   }
 
   /**

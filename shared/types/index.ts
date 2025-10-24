@@ -42,6 +42,18 @@ export type {
   NextRouteHandler,
 } from "./api-hof.types";
 
+// API Client Types
+export type { FetchType, ApiError } from "../api/api.client";
+export {
+  get,
+  post,
+  put,
+  patch,
+  del,
+  setAccessTokenGetter,
+  readDataFromStream,
+} from "../api/api.client";
+
 // Error Handling Classes & Utilities
 export {
   BaseError,
