@@ -22,10 +22,9 @@
  * const ProjectMongooseSchema = zodToMongoose(ProjectFieldsSchema);
  * ```
  *
- * NOTE: This utility accesses Zod's internal `_def` API to introspect schemas.
- * While these APIs are discouraged by the Zod team and may change in future versions,
- * they remain available at runtime in Zod v4. Type assertions are used to work around
- * TypeScript's stricter access controls in v4.
+ * NOTE: This utility accesses Zod's internal structure for schema introspection.
+ * Zod v4 deprecates direct access to _def, but provides no public alternative.
+ * We use proper TypeScript types to ensure type safety while accessing internals.
  */
 
 import { Schema, SchemaDefinition, SchemaDefinitionProperty } from "mongoose";
@@ -41,13 +40,88 @@ export interface MongooseSchemaOptions {
   };
   collection?: string;
   versionKey?: string | false;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
  * Internal type for Mongoose field definitions
  */
 type MongooseFieldDefinition = SchemaDefinitionProperty | Schema;
+
+/**
+ * Type definitions for Zod's internal structure (v4)
+ * These types represent Zod's internal _def property structure
+ */
+interface ZodDef {
+  typeName: string;
+}
+
+interface ZodOptionalDef extends ZodDef {
+  innerType: z.ZodTypeAny;
+}
+
+interface ZodDefaultDef extends ZodDef {
+  innerType: z.ZodTypeAny;
+  defaultValue: unknown;
+}
+
+interface ZodNullableDef extends ZodDef {
+  innerType: z.ZodTypeAny;
+}
+
+interface ZodStringDef extends ZodDef {
+  checks?: Array<{
+    kind: string;
+    value?: number;
+    regex?: RegExp;
+  }>;
+}
+
+interface ZodNumberDef extends ZodDef {
+  checks?: Array<{
+    kind: string;
+    value?: number;
+  }>;
+}
+
+interface ZodEnumDef extends ZodDef {
+  values: readonly string[];
+}
+
+interface ZodArrayDef extends ZodDef {
+  type: z.ZodTypeAny;
+}
+
+interface ZodObjectDef extends ZodDef {
+  shape: Record<string, z.ZodTypeAny>;
+}
+
+interface ZodUnionDef extends ZodDef {
+  options: z.ZodTypeAny[];
+}
+
+interface ZodLiteralDef extends ZodDef {
+  value: string | number | boolean;
+}
+
+/**
+ * Type guard to check if a Zod type has a specific def structure
+ */
+function hasInternalDef<T extends ZodDef>(
+  zodType: z.ZodTypeAny
+): zodType is z.ZodTypeAny & { _def: T } {
+  return "_def" in zodType && zodType._def !== undefined;
+}
+
+/**
+ * Safely access the internal def of a Zod type
+ */
+function getInternalDef<T extends ZodDef>(zodType: z.ZodTypeAny): T {
+  if (!hasInternalDef(zodType)) {
+    throw new Error("Invalid Zod type: missing _def property");
+  }
+  return zodType._def as unknown as T;
+}
 
 /**
  * Convert a Zod type to Mongoose field definition
@@ -61,31 +135,38 @@ type MongooseFieldDefinition = SchemaDefinitionProperty | Schema;
 export function zodToMongooseField(
   zodType: z.ZodTypeAny
 ): MongooseFieldDefinition {
-  const def: Record<string, any> = {};
+  const def: SchemaDefinitionProperty = {};
 
   // Unwrap optional, nullable, default wrappers
-  let unwrapped: any = zodType;
+  let unwrapped: z.ZodTypeAny = zodType;
   let isOptional = false;
   let hasDefault = false;
-  let defaultValue: any = undefined;
+  let defaultValue: unknown = undefined;
 
   // Unwrap ZodOptional
   if (unwrapped instanceof z.ZodOptional) {
     isOptional = true;
-    unwrapped = (unwrapped as any)._def.innerType;
+    const optionalDef = getInternalDef<ZodOptionalDef>(unwrapped);
+    unwrapped = optionalDef.innerType;
   }
 
   // Unwrap ZodDefault
   if (unwrapped instanceof z.ZodDefault) {
     hasDefault = true;
-    defaultValue = (unwrapped as any)._def.defaultValue();
-    unwrapped = (unwrapped as any)._def.innerType;
+    const defaultDef = getInternalDef<ZodDefaultDef>(unwrapped);
+    const defValue = defaultDef.defaultValue;
+    defaultValue =
+      typeof defValue === "function"
+        ? (defValue as () => unknown)()
+        : defValue;
+    unwrapped = defaultDef.innerType;
   }
 
   // Unwrap ZodNullable (treat as optional in Mongoose)
   if (unwrapped instanceof z.ZodNullable) {
     isOptional = true;
-    unwrapped = (unwrapped as any)._def.innerType;
+    const nullableDef = getInternalDef<ZodNullableDef>(unwrapped);
+    unwrapped = nullableDef.innerType;
   }
 
   // Handle ZodString
@@ -94,17 +175,24 @@ export function zodToMongooseField(
     def.trim = true; // Default to trim for all strings
 
     // Extract string validations
-    const checks = (unwrapped as any)._def.checks || [];
+    const stringDef = getInternalDef<ZodStringDef>(unwrapped);
+    const checks = stringDef.checks || [];
     for (const check of checks) {
       switch (check.kind) {
         case "min":
-          def.minlength = check.value;
+          if (check.value !== undefined) {
+            def.minlength = check.value;
+          }
           break;
         case "max":
-          def.maxlength = check.value;
+          if (check.value !== undefined) {
+            def.maxlength = check.value;
+          }
           break;
         case "regex":
-          def.match = check.regex;
+          if (check.regex !== undefined) {
+            def.match = check.regex;
+          }
           break;
         case "url":
           // Mongoose doesn't have built-in URL validation, could add custom
@@ -121,14 +209,19 @@ export function zodToMongooseField(
     def.type = Number;
 
     // Extract number validations
-    const checks = (unwrapped as any)._def.checks || [];
+    const numberDef = getInternalDef<ZodNumberDef>(unwrapped);
+    const checks = numberDef.checks || [];
     for (const check of checks) {
       switch (check.kind) {
         case "min":
-          def.min = check.value;
+          if (check.value !== undefined) {
+            def.min = check.value;
+          }
           break;
         case "max":
-          def.max = check.value;
+          if (check.value !== undefined) {
+            def.max = check.value;
+          }
           break;
         case "int":
           // Mongoose doesn't enforce integer, but we could add custom validator
@@ -150,12 +243,14 @@ export function zodToMongooseField(
   // Handle ZodEnum
   else if (unwrapped instanceof z.ZodEnum) {
     def.type = String;
-    def.enum = (unwrapped as any)._def.values;
+    const enumDef = getInternalDef<ZodEnumDef>(unwrapped);
+    def.enum = enumDef.values;
   }
 
   // Handle ZodArray
   else if (unwrapped instanceof z.ZodArray) {
-    const elementType = (unwrapped as any)._def.type;
+    const arrayDef = getInternalDef<ZodArrayDef>(unwrapped);
+    const elementType = arrayDef.type;
     const elementDef = zodToMongooseField(elementType);
 
     // Array in Mongoose is denoted by wrapping in []
@@ -164,11 +259,12 @@ export function zodToMongooseField(
 
   // Handle ZodObject (nested subdocument)
   else if (unwrapped instanceof z.ZodObject) {
-    const shape = (unwrapped as any)._def.shape();
-    const nestedDef: Record<string, any> = {};
+    const objectDef = getInternalDef<ZodObjectDef>(unwrapped);
+    const shape = objectDef.shape;
+    const nestedDef: Record<string, MongooseFieldDefinition> = {};
 
     for (const [key, value] of Object.entries(shape)) {
-      nestedDef[key] = zodToMongooseField(value as z.ZodTypeAny);
+      nestedDef[key] = zodToMongooseField(value);
     }
 
     return nestedDef;
@@ -176,13 +272,17 @@ export function zodToMongooseField(
 
   // Handle ZodUnion (take first type - Mongoose doesn't support unions well)
   else if (unwrapped instanceof z.ZodUnion) {
-    const firstOption = (unwrapped as any)._def.options[0];
-    return zodToMongooseField(firstOption);
+    const unionDef = getInternalDef<ZodUnionDef>(unwrapped);
+    const firstOption = unionDef.options[0];
+    if (firstOption) {
+      return zodToMongooseField(firstOption);
+    }
   }
 
   // Handle ZodLiteral
   else if (unwrapped instanceof z.ZodLiteral) {
-    const literalValue = (unwrapped as any)._def.value;
+    const literalDef = getInternalDef<ZodLiteralDef>(unwrapped);
+    const literalValue = literalDef.value;
     if (typeof literalValue === "string") {
       def.type = String;
       def.enum = [literalValue];
@@ -236,16 +336,17 @@ export function zodToMongooseField(
  * });
  * ```
  */
-export function zodToMongoose<T extends z.ZodObject<any>>(
+export function zodToMongoose<T extends z.ZodObject<z.ZodRawShape>>(
   zodSchema: T,
   options?: MongooseSchemaOptions
 ): Schema<z.infer<T>> {
-  const shape = (zodSchema as any)._def.shape();
+  const objectDef = getInternalDef<ZodObjectDef>(zodSchema);
+  const shape = objectDef.shape;
   const schemaDefinition: SchemaDefinition = {};
 
   // Convert each field in the Zod schema
   for (const [key, value] of Object.entries(shape)) {
-    schemaDefinition[key] = zodToMongooseField(value as z.ZodTypeAny);
+    schemaDefinition[key] = zodToMongooseField(value);
   }
 
   // Create the Mongoose schema with proper type handling
@@ -267,16 +368,17 @@ export function zodToMongoose<T extends z.ZodObject<any>>(
  * @param baseFields - Base entity field definitions (from baseUserEntityDefinition)
  * @returns Complete schema definition ready for Mongoose
  */
-export function mergeWithBaseFields<T extends z.ZodObject<any>>(
+export function mergeWithBaseFields<T extends z.ZodObject<z.ZodRawShape>>(
   domainSchema: T,
-  baseFields: Record<string, any>
+  baseFields: SchemaDefinition
 ): SchemaDefinition {
-  const shape = (domainSchema as any)._def.shape();
+  const objectDef = getInternalDef<ZodObjectDef>(domainSchema);
+  const shape = objectDef.shape;
   const schemaDefinition: SchemaDefinition = {};
 
   // Convert domain fields
   for (const [key, value] of Object.entries(shape)) {
-    schemaDefinition[key] = zodToMongooseField(value as z.ZodTypeAny);
+    schemaDefinition[key] = zodToMongooseField(value);
   }
 
   // Merge with base fields
@@ -304,24 +406,29 @@ export function mergeWithBaseFields<T extends z.ZodObject<any>>(
  */
 export class SchemaBuilder<T> {
   private schema: Schema<T> | null = null;
-  private indexes: Array<{ fields: Record<string, 1 | -1>; options?: any }> =
-    [];
+  private indexes: Array<{
+    fields: Record<string, 1 | -1>;
+    options?: Record<string, unknown>;
+  }> = [];
 
   /**
    * Initialize from a Zod schema
    */
-  fromZod<Z extends z.ZodObject<any>>(
+  fromZod<Z extends z.ZodObject<z.ZodRawShape>>(
     zodSchema: Z,
     options?: MongooseSchemaOptions
   ): SchemaBuilder<z.infer<Z>> {
-    this.schema = zodToMongoose(zodSchema, options) as any;
-    return this as any;
+    this.schema = zodToMongoose(zodSchema, options) as Schema<T>;
+    return this as SchemaBuilder<z.infer<Z>>;
   }
 
   /**
    * Add an index to the schema
    */
-  addIndex(fields: Record<string, 1 | -1>, options?: any): SchemaBuilder<T> {
+  addIndex(
+    fields: Record<string, 1 | -1>,
+    options?: Record<string, unknown>
+  ): SchemaBuilder<T> {
     this.indexes.push({ fields, options });
     return this;
   }

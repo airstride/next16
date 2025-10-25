@@ -77,7 +77,7 @@ export type UpdateSubscriptionInput = z.infer<
  * Increment usage
  */
 export const IncrementUsageInputSchema = z.object({
-  usage_type: z.enum(["projects", "users", "api_calls", "storage"]),
+  usage_type: z.enum(["clients", "users", "api_calls", "storage"]),
   amount: z.number().int().min(1).default(1),
 });
 

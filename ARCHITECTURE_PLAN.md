@@ -8,7 +8,7 @@ Growthmind is an autonomous growth partner for startups, built on an event-drive
 ### 1. API Routes (app/api/)
 Lightweight routes that handle HTTP requests and delegate to domain services.
 
-- `app/api/projects/route.ts` - Project/company context management
+- `app/api/clients/route.ts` - Project/company context management
 - `app/api/strategy/route.ts` - Strategy plan generation
 - `app/api/tasks/route.ts` - Task management and execution
 - `app/api/analytics/route.ts` - Analytics and metrics
@@ -17,7 +17,7 @@ Lightweight routes that handle HTTP requests and delegate to domain services.
 
 ### 2. Domain Modules (modules/)
 
-#### Projects Module (`modules/projects/`)
+#### Projects Module (`modules/clients/`)
 Owns company context and onboarding data - the foundational "truth file" for all growth activities.
 
 - `schema.ts` - Mongoose Project/Company model

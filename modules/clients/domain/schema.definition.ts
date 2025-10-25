@@ -126,6 +126,7 @@ export const CompetitorSchema = z.object({
   strengths: z.array(z.string().trim()).optional().default([]),
   weaknesses: z.array(z.string().trim()).optional().default([]),
   estimated_monthly_traffic: z.number().nonnegative().optional(),
+  employee_threshold_size: z.string().trim().optional(),
 });
 
 /**
@@ -202,6 +203,7 @@ export const ConversionFunnelSchema = z.object({
   awareness_channels: z.array(z.string().trim()).optional().default([]),
   consideration_assets: z.array(z.string().trim()).optional().default([]),
   decision_triggers: z.array(z.string().trim()).optional().default([]),
+  decision_maker_job_title: z.string().trim().optional(),
   primary_cta: z.string().trim().optional(),
   conversion_bottleneck: z.string().trim().optional(),
   avg_sales_cycle_days: z.number().nonnegative().optional(),

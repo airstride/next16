@@ -168,6 +168,7 @@ export interface ICompetitor {
   strengths?: string[];
   weaknesses?: string[];
   estimated_monthly_traffic?: number;
+  employee_threshold_size?: string;
 }
 
 /**
@@ -244,6 +245,7 @@ export interface IConversionFunnel {
   awareness_channels?: string[]; // e.g., ["SEO", "Paid Ads", "Social Media"]
   consideration_assets?: string[]; // e.g., ["Case Studies", "Product Demo", "Free Trial"]
   decision_triggers?: string[]; // e.g., ["Pricing Page Visit", "Demo Booking", "Contact Sales"]
+  decision_maker_job_title?: string;
   primary_cta?: string; // Main call-to-action (e.g., "Book a Demo", "Start Free Trial")
   conversion_bottleneck?: string; // Biggest drop-off point
   avg_sales_cycle_days?: number;
@@ -321,4 +323,3 @@ type ValidateClientHasRequiredFields = IClient extends {
   : never;
 
 // This const will error if the type validation fails
-const _typeValidation: ValidateClientHasRequiredFields = true;

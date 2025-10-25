@@ -1,6 +1,6 @@
 export enum Permissions {
-  READ_PROJECTS = "READ_PROJECTS",
-  WRITE_PROJECTS = "WRITE_PROJECTS",
+  READ_CLIENTS = "READ_CLIENTS",
+  WRITE_CLIENTS = "WRITE_CLIENTS",
   WRITE_INVITE = "propelauth::can_invite",
   WRITE_API_KEYS = "propelauth::can_manage_api_keys",
   WRITE_USER_ROLES = "propelauth::can_change_roles",

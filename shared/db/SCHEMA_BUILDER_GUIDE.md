@@ -644,7 +644,7 @@ export const UserFieldsSchema = z.object({ ... });
 
 ## 📖 Real-World Example
 
-See the **Projects Module** (`modules/projects/`) for a complete, production-ready implementation:
+See the **Projects Module** (`modules/clients/`) for a complete, production-ready implementation:
 
 - `domain/schema.definition.ts` - Zod schemas (single source of truth)
 - `domain/types.ts` - Inferred TypeScript types

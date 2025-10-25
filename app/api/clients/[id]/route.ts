@@ -52,7 +52,7 @@ export const GET = withAuth(
     }
   ),
   {
-    requiredPermissions: [Permissions.READ_PROJECTS],
+    requiredPermissions: [Permissions.READ_CLIENTS],
   }
 );
 
@@ -101,7 +101,7 @@ export const PATCH = withAuth(
     )
   ),
   {
-    requiredPermissions: [Permissions.WRITE_PROJECTS],
+    requiredPermissions: [Permissions.WRITE_CLIENTS],
   }
 );
 
@@ -142,6 +142,6 @@ export const DELETE = withAuth(
     }
   ),
   {
-    requiredPermissions: [Permissions.WRITE_PROJECTS],
+    requiredPermissions: [Permissions.WRITE_CLIENTS],
   }
 );

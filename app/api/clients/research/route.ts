@@ -42,6 +42,6 @@ export const POST = withAuth(
     )
   ),
   {
-    requiredPermissions: [Permissions.WRITE_PROJECTS],
+    requiredPermissions: [Permissions.WRITE_CLIENTS],
   }
 );

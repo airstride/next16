@@ -26,7 +26,7 @@ export const GET = withAuth(
     }
   }),
   {
-    requiredPermissions: [Permissions.READ_PROJECTS],
+    requiredPermissions: [Permissions.READ_CLIENTS],
   }
 );
 
@@ -57,6 +57,6 @@ export const POST = withAuth(
     )
   ),
   {
-    requiredPermissions: [Permissions.WRITE_PROJECTS],
+    requiredPermissions: [Permissions.WRITE_CLIENTS],
   }
 );
