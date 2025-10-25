@@ -79,6 +79,20 @@ export enum CompanyStage {
 
 export const CompanyStageValues = Object.values(CompanyStage);
 
+/**
+ * Employee size ranges for competitor analysis
+ */
+export enum EmployeeSize {
+  MICRO = "1-10",
+  SMALL = "11-50",
+  MEDIUM = "51-250",
+  LARGE = "251-1000",
+  ENTERPRISE = "1001-5000",
+  MEGA = "5001+",
+}
+
+export const EmployeeSizeValues = Object.values(EmployeeSize);
+
 // ============================================
 // DOMAIN INTERFACES - Database Agnostic
 // ============================================
@@ -168,7 +182,7 @@ export interface ICompetitor {
   strengths?: string[];
   weaknesses?: string[];
   estimated_monthly_traffic?: number;
-  employee_threshold_size?: string;
+  employee_size?: EmployeeSize;
 }
 
 /**
@@ -306,20 +320,5 @@ export type IClient = Omit<
     deleted_at?: Date;
     deleted_by?: string;
   };
-
-/**
- * Type-level validation: Ensure IClient has all required fields
- * This will cause a compile error if the inferred type is incomplete
- */
-type ValidateClientHasRequiredFields = IClient extends {
-  _id: any;
-  company: any;
-  research_metadata: any;
-  user_id: string;
-  created_at: Date;
-  updated_at: Date;
-}
-  ? true
-  : never;
 
 // This const will error if the type validation fails

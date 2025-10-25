@@ -39,6 +39,8 @@ export {
   generateStructuredOutput,
   generateStructuredOutputWithWebSearch,
   streamText,
+  streamStructuredOutput,
+  streamStructuredOutputWithWebSearch,
 } from "./ai.sdk.service";
 
 // Export types and enums
@@ -48,6 +50,7 @@ export {
   AIRoles,
   TemperaturePreset,
   MaxTokensPreset,
+  StreamEventType,
   TEMPERATURE,
   MAX_TOKENS,
   OPENAI_PROVIDER,
@@ -63,8 +66,13 @@ export {
   type MessageRole,
   type ConversationMessage,
   type GenerateConfig,
+  type GenerateStructuredConfig,
   type GenerateTextResult,
   type GenerateTextStreamResult,
+  type GenerateStructuredResult,
+  type GenerateStructuredStreamResult,
+  type StreamEvent,
+  type StreamStructuredConfig,
   type ToolCallResult,
   type WebSearchConfig,
   type GenerateWithToolsResult,

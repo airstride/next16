@@ -92,7 +92,21 @@ export type WebsiteUrlInput = BrandedZodType<
  * ⚡ SCHEMA REUSE: Uses domain schemas directly instead of duplicating
  * This was previously 150+ lines of duplicated schema definitions.
  * Now it's just composition of existing schemas!
+ *
+ * ⚠️ AI-COMPATIBLE: Date fields are converted to ISO string format
+ * because Zod v4's JSON Schema generator doesn't support z.date() types.
+ * The AI SDK needs JSON Schema for structured output.
  */
+
+// AI-compatible version of ExistingCustomerSchema (dates as strings)
+const AIExistingCustomerSchema = ExistingCustomerSchema.extend({
+  start_date: z.string().datetime().optional(),
+});
+
+// AI-compatible version of ContentInventorySchema (dates as strings)
+const AIContentInventorySchema = ContentInventorySchema.extend({
+  last_published: z.string().datetime().optional(),
+});
 
 export const AIExtractedContextSchema = z.object({
   // Reuse domain schemas directly - zero duplication!
@@ -105,10 +119,10 @@ export const AIExtractedContextSchema = z.object({
   brand_voice: BrandVoiceSchema.optional(),
   marketing_assets: MarketingAssetsSchema.optional(),
 
-  // Growth strategy intelligence - reuse domain schemas
+  // Growth strategy intelligence - use AI-compatible schemas for date fields
   competitors: z.array(CompetitorSchema).optional().default([]),
   current_metrics: CurrentMetricsSchema.optional(),
-  content_inventory: ContentInventorySchema.optional(),
+  content_inventory: AIContentInventorySchema.optional(),
   tech_stack: TechStackSchema.optional(),
   resources: ResourcesSchema.optional(),
   conversion_funnel: ConversionFunnelSchema.optional(),

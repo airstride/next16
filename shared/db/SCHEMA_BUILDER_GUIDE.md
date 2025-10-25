@@ -442,7 +442,7 @@ z.object({
 // → { address: { street: String, city: String } }
 
 // Enum from TypeScript enum
-z.enum(UserRoleValues as [string, ...string[]])
+z.enum(UserRoleValues )
 // → { type: String, enum: ["admin", "user", "guest"] }
 ```
 

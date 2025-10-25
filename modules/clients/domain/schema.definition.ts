@@ -33,8 +33,11 @@
 import { z } from "zod";
 import {
   CompanyStageValues,
+  EmployeeSizeValues,
   ResearchStatusValues,
   ResearchSourceValues,
+  ResearchStatus,
+  ResearchSource,
 } from "./types";
 
 // ============================================
@@ -47,7 +50,7 @@ import {
 export const CompanySchema = z.object({
   name: z.string().min(1, "Company name is required").trim(),
   industry: z.string().trim().optional(),
-  stage: z.enum(CompanyStageValues as [string, ...string[]]).optional(),
+  stage: z.enum(CompanyStageValues).optional(),
   website: z.string().url("Invalid website URL").trim(),
   description: z.string().trim().optional(),
 });
@@ -126,7 +129,7 @@ export const CompetitorSchema = z.object({
   strengths: z.array(z.string().trim()).optional().default([]),
   weaknesses: z.array(z.string().trim()).optional().default([]),
   estimated_monthly_traffic: z.number().nonnegative().optional(),
-  employee_threshold_size: z.string().trim().optional(),
+  employee_size: z.enum(EmployeeSizeValues).optional(),
 });
 
 /**
@@ -213,12 +216,8 @@ export const ConversionFunnelSchema = z.object({
  * Research metadata for AI-powered extraction schema
  */
 export const ResearchMetadataSchema = z.object({
-  status: z
-    .enum(ResearchStatusValues as [string, ...string[]])
-    .default("manual"),
-  source: z
-    .enum(ResearchSourceValues as [string, ...string[]])
-    .default("manual"),
+  status: z.enum(ResearchStatusValues).default(ResearchStatus.MANUAL),
+  source: z.enum(ResearchSourceValues).default(ResearchSource.AI),
   researched_at: z.coerce.date().optional(),
   confidence: z.number().min(0).max(1).optional(),
   factual_confidence: z.number().min(0).max(1).optional(),

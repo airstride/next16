@@ -156,9 +156,7 @@ export function zodToMongooseField(
     const defaultDef = getInternalDef<ZodDefaultDef>(unwrapped);
     const defValue = defaultDef.defaultValue;
     defaultValue =
-      typeof defValue === "function"
-        ? (defValue as () => unknown)()
-        : defValue;
+      typeof defValue === "function" ? (defValue as () => unknown)() : defValue;
     unwrapped = defaultDef.innerType;
   }
 

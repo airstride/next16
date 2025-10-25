@@ -191,8 +191,8 @@ const AIRolesValues = Object.values(AIRoles);
 /**
  * Enum values for Zod validation
  */
-const AIProviderValues = Object.values(AIProvider) as [string, ...string[]];
-const AIModelValues = Object.values(AIModel) as [string, ...string[]];
+const AIProviderValues = Object.values(AIProvider);
+const AIModelValues = Object.values(AIModel);
 
 /**
  * Conversation message structure
@@ -272,6 +272,80 @@ export interface GenerateTextStreamResult {
     completionTokens: number;
     totalTokens: number;
   }>;
+}
+
+/**
+ * Streaming progress event types
+ */
+export enum StreamEventType {
+  /** Initial event when streaming starts */
+  START = "start",
+  /** Progress update with current action/status */
+  PROGRESS = "progress",
+  /** Partial data update (part of the structured output) */
+  PARTIAL = "partial",
+  /** Complete data received */
+  COMPLETE = "complete",
+  /** Error occurred during streaming */
+  ERROR = "error",
+  /** Web search is being performed */
+  SEARCH = "search",
+  /** Extraction/parsing in progress */
+  EXTRACT = "extract",
+}
+
+/**
+ * Streaming event structure
+ */
+export interface StreamEvent<T = any> {
+  type: StreamEventType;
+  /** Human-readable status message */
+  message?: string;
+  /** Partial or complete data object */
+  data?: Partial<T>;
+  /** Current step/phase of the operation */
+  step?: string;
+  /** Progress percentage (0-100) if applicable */
+  progress?: number;
+  /** Error details if type is ERROR */
+  error?: {
+    message: string;
+    code?: string;
+  };
+  /** Additional metadata */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Result from streaming structured output generation
+ */
+export interface GenerateStructuredStreamResult<T> {
+  /** Stream of partial object updates */
+  partialObjectStream: ReadableStream<Partial<T>>;
+  /** Promise that resolves with the final complete object */
+  objectPromise: Promise<T>;
+  /** Usage information promise */
+  usage: Promise<{
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  }>;
+  /** Stream of progress events with metadata */
+  eventStream?: ReadableStream<StreamEvent<T>>;
+}
+
+/**
+ * Configuration for streaming structured output with progress events
+ */
+export interface StreamStructuredConfig extends GenerateStructuredConfig {
+  /** Enable progress events (default: true) */
+  enableProgressEvents?: boolean;
+  /** Custom progress messages for different phases */
+  progressMessages?: {
+    search?: string;
+    extract?: string;
+    complete?: string;
+  };
 }
 
 /**
@@ -373,7 +447,12 @@ export const GenerateConfigSchema = z.object({
     .describe("Temperature preset or custom value (0-2)"),
   maxTokens: z
     .union([
-      z.union([z.literal(1000), z.literal(4096), z.literal(8192), z.literal(16384)]),
+      z.union([
+        z.literal(1000),
+        z.literal(4096),
+        z.literal(8192),
+        z.literal(16384),
+      ]),
       z.number().positive(),
     ])
     .optional()
@@ -392,5 +471,3 @@ export const ConversationMessageSchema = z.object({
   role: z.enum(AIRolesValues),
   content: z.string(),
 });
-
-

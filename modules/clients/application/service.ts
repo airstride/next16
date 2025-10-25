@@ -37,9 +37,11 @@ import {
 } from "../api/validation";
 import {
   generateStructuredOutputWithWebSearch,
+  streamStructuredOutputWithWebSearch,
   AIProvider,
   AIModel,
   TemperaturePreset,
+  type GenerateStructuredStreamResult,
 } from "@/shared/ai-sdk";
 import { logger } from "@/shared/utils/logger";
 import {
@@ -145,6 +147,79 @@ export class ClientsService extends BaseService<
       throw new ExternalServiceError(
         "AI Website Research",
         `Failed to research website: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        {
+          websiteUrl,
+          originalError: error,
+        }
+      );
+    }
+  }
+
+  /**
+   * Stream website research with real-time progress updates
+   * Uses ai-sdk's streamStructuredOutputWithWebSearch for real-time UX
+   *
+   * Returns a stream that provides:
+   * - Progress events (searching, extracting, etc.)
+   * - Partial data updates as they're generated
+   * - Final complete data
+   *
+   * Perfect for showing users what's happening during the research process.
+   */
+  async streamResearchWebsite(websiteUrl: string): Promise<
+    GenerateStructuredStreamResult<AIExtractedContext> & {
+      sources?: any;
+      searchTextPromise: Promise<string>;
+    }
+  > {
+    log.info(`Starting streaming AI research for website: ${websiteUrl}`);
+
+    try {
+      // Craft comprehensive prompt for website research
+      const prompt = this.buildResearchPrompt(websiteUrl);
+
+      // Call AI with streaming web search
+      const streamResult = await streamStructuredOutputWithWebSearch({
+        prompt,
+        schema: AIExtractedContextSchema,
+        config: {
+          provider: AIProvider.GOOGLE,
+          model: AIModel.GEMINI_2_5_FLASH,
+          temperature: TemperaturePreset.PRECISE, // 0.3 for factual extraction
+          maxTokens: 4096,
+          enableProgressEvents: true,
+          progressMessages: {
+            search: `🔍 Researching ${websiteUrl}...`,
+            extract: "📊 Extracting company intelligence...",
+            complete: "✅ Research completed!",
+          },
+        },
+      });
+
+      // Log completion (happens when objectPromise resolves)
+      streamResult.objectPromise
+        .then((result) => {
+          log.info("Streaming AI research completed successfully", {
+            websiteUrl,
+            confidence: result.confidence,
+          });
+        })
+        .catch((error) => {
+          log.error("Streaming AI research failed", { websiteUrl, error });
+        });
+
+      return streamResult;
+    } catch (error) {
+      log.error("Failed to initiate streaming AI research", {
+        websiteUrl,
+        error,
+      });
+
+      throw new ExternalServiceError(
+        "AI Website Research",
+        `Failed to start streaming research: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
         {

@@ -276,6 +276,12 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
     - [x] **ENHANCED PROMPT:** Tech stack detection (BuiltWith data, CMS, analytics, email platforms)
     - [x] **ENHANCED PROMPT:** Team size research (LinkedIn company page data)
     - [x] **ENHANCED PROMPT:** Conversion funnel mapping (CTAs, lead magnets, sales triggers)
+  - [x] **`streamResearchWebsite(websiteUrl)` - Streaming version with real-time progress**
+    - [x] Uses `streamStructuredOutputWithWebSearch()` from ai-sdk
+    - [x] Returns stream with progress events and partial data updates
+    - [x] Emits events: START, SEARCH, PROGRESS, PARTIAL, COMPLETE, ERROR
+    - [x] Custom progress messages for better UX
+    - [x] Same comprehensive prompt as blocking version
   - [x] `createClientFromWebsite(websiteUrl, userId)` - Research + create client
     - [x] Call `researchWebsite()` to get AI-extracted context
     - [x] Store extracted data in Clients schema
@@ -288,7 +294,8 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
 - [x] Build API routes for clients module (lightweight pattern)
   - [x] GET /api/clients - List all clients for organization
   - [x] POST /api/clients - Create client manually
-  - [x] POST /api/clients/research - Submit website URL for AI research
+  - [x] POST /api/clients/research - Submit website URL for AI research (blocking)
+  - [x] **POST /api/clients/research/stream - Submit website URL for streaming AI research (SSE)**
   - [x] GET /api/clients/:id - Get client by ID
   - [x] PATCH /api/clients/:id - Update client
   - [x] DELETE /api/clients/:id - Delete client (soft delete)
@@ -297,6 +304,7 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
   - [x] All routes use createErrorResponse helper for consistent error handling
   - [x] All routes include proper ownership verification for user/org access control
   - [x] Fixed nativeEnum usage to z.enum with array values per project rules
+  - [x] **Streaming endpoint sends progress events and partial data via SSE**
 
 #### Clients Module Integration Tests
 - [ ] Create test file: `tests/integration/clients/clients.test.ts`
@@ -983,6 +991,26 @@ TWITTER_API_SECRET=
   - Structured output ensures consistent data format for database storage
   - Use temperature: TemperaturePreset.PRECISE (0.3) for factual extraction
   - Use model: AIModel.GEMINI_2_5_FLASH for cost-effective research
+- **Streaming Research (NEW - Improved UX):**
+  - **Streaming API:** `POST /api/clients/research/stream` - Real-time progress updates via Server-Sent Events (SSE)
+  - **Service Method:** `clientsService.streamResearchWebsite(websiteUrl)` - Returns streaming result
+  - **Progress Events:** Users see real-time status updates:
+    - "🔍 Researching website..." (0-20%)
+    - "Searching the web for information..." (20-40%)
+    - "📊 Extracting company intelligence..." (40-90%)
+    - "✅ Research completed!" (100%)
+  - **Partial Data Updates:** Frontend receives partial JSON as AI generates it
+  - **Event Types:** START, SEARCH, PROGRESS, PARTIAL, COMPLETE, ERROR
+  - **Implementation:**
+    - Uses `streamStructuredOutputWithWebSearch()` from ai-sdk
+    - Combines web search + streaming structured extraction
+    - SSE format for browser compatibility
+    - Automatic error handling and retry support
+  - **Benefits:**
+    - Better user experience (no black box waiting)
+    - Shows AI is working (reduces perceived latency)
+    - Allows early cancellation if needed
+    - Great for long-running research tasks (30-90s)
 - **Research Quality:**
   - AI extracts factual data (company name, industry, products, social handles)
   - AI infers strategic data (ICP hints, business goals, brand voice)
