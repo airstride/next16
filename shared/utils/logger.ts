@@ -10,9 +10,9 @@ class Logger {
 
   private formatMessage(level: LogLevel, message: string): string {
     const timestamp = new Date().toISOString();
-    const correlationId = this.options.correlationId;
+    const correlationIdPrefix = this.options.correlationId ? `${this.options.correlationId} ` : "";
     const modulePrefix = this.options.module ? `[${this.options.module}] ` : "";
-    return `${timestamp} ${level.toUpperCase()} ${correlationId}${modulePrefix}${message}`;
+    return `${timestamp} ${level.toUpperCase()} ${correlationIdPrefix}${modulePrefix}${message}`;
   }
 
   child(options: LoggerOptions): Logger {

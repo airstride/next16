@@ -213,7 +213,6 @@
 - ✅ Test via integration tests following `tests/integration/ai/partner.research.test.ts` pattern
 - ✅ Use real AI providers in tests for true integration validation
 - ✅ Test all API endpoints, workflows, and business logic
-- ✅ Validate with Airstride data before building UI
 - ❌ NO frontend work until backend is complete and tested
 
 ---
@@ -411,7 +410,7 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
     - [ ] E-commerce company context
     - [ ] Service business context
   - [ ] Test: Prompt engineering validation
-    - [ ] Verify plan quality for real company (e.g., Airstride)
+    - [ ] Verify plan quality for real company (e.g., Airstride.ai)
     - [ ] Verify calendar tasks are actionable
     - [ ] Verify tactics are specific and relevant
 
@@ -422,7 +421,7 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
 - [ ] AI plan generation produces quality 30-day plans
 - [ ] All integration tests passing
 - [ ] Can test end-to-end via API calls (Postman/curl)
-- [ ] Airstride client can be created and plan generated
+- [ ] Client can be created and plan generated
 - [ ] Document learnings and prompt iterations
 
 ---
@@ -800,7 +799,7 @@ For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a s
 - [ ] Can execute tasks end-to-end via API
 - [ ] Analytics can record and retrieve metrics
 - [ ] Settings control automation behavior
-- [ ] Airstride content can be generated and evaluated
+- [ ] Content can be generated and evaluated
 - [ ] Documentation updated with agent patterns and prompt strategies
 
 ---
@@ -907,8 +906,8 @@ TWITTER_API_SECRET=
 - [ ] AI plan generation produces quality 30-day plans
 - [ ] All integration tests passing (clients + strategy)
 - [ ] Can test end-to-end via API calls (Postman/Insomnia/curl)
-- [ ] Airstride client can be created via API
-- [ ] Airstride 30-day plan can be generated via API
+- [ ] Client can be created via API
+- [ ] 30-day plan can be generated via API
 - [ ] Plan quality validated manually
 - [ ] Documentation complete for API patterns
 
@@ -934,7 +933,7 @@ TWITTER_API_SECRET=
 - [ ] Can execute complete workflow via API: client → plan → tasks → content
 - [ ] Analytics can record and retrieve metrics
 - [ ] Settings control automation behavior
-- [ ] Airstride content generated and evaluated for quality
+- [ ] Content generated and evaluated for quality
 - [ ] Foundation ready for frontend + full user workflows
 
 ### Frontend Phase Success (After Backend Complete)
@@ -944,7 +943,6 @@ TWITTER_API_SECRET=
 - [ ] Users can review and approve generated content
 - [ ] Users can view analytics and performance
 - [ ] Users can configure settings per client
-- [ ] Full user workflows validated with Airstride
 
 ---
 
@@ -976,7 +974,6 @@ TWITTER_API_SECRET=
 7. Only build frontend after ALL backend modules are complete and tested
 
 ### General Principles
-- Focus on Airstride as the first real customer throughout all phases
 - Prioritize learning over perfection in v0.1-0.3
 - Document everything - you'll need it when adding autonomy
 - Test event flows thoroughly - they're the foundation of autonomy

@@ -1,4 +1,29 @@
 import type { AuthUser } from "@/shared/auth/auth.service";
+import { Permissions, UserRole } from "./types";
+
+/**
+ * Utility type to convert SNAKE_CASE to PascalCase
+ * Example: READ_CLIENTS -> ReadClients, VIEW_BILLING -> ViewBilling
+ */
+type SnakeToPascal<S extends string> = S extends `${infer First}_${infer Rest}`
+  ? `${Capitalize<Lowercase<First>>}${SnakeToPascal<Rest>}`
+  : Capitalize<Lowercase<S>>;
+
+/**
+ * Type that enforces all permissions have corresponding can* methods
+ * This creates a compile-time error if you add a permission without adding its method
+ *
+ * Maps enum keys (e.g., READ_CLIENTS) to method names (e.g., canReadClients)
+ *
+ * Example:
+ * - READ_CLIENTS -> canReadClients(orgId?: string): boolean
+ * - WRITE_BILLING -> canWriteBilling(orgId?: string): boolean
+ */
+type PermissionMethods = {
+  [K in keyof typeof Permissions as `can${SnakeToPascal<K & string>}`]: (
+    orgId?: string
+  ) => boolean;
+};
 
 /**
  * Server-side Permissions Utility
@@ -9,7 +34,7 @@ import type { AuthUser } from "@/shared/auth/auth.service";
  * @param user - AuthUser instance (PropelAuth user)
  * @param activeOrgId - The organization ID to check permissions for (optional, uses active org if not provided)
  */
-export class ServerPermissions {
+export class ServerPermissions implements PermissionMethods {
   private user: AuthUser;
   private activeOrgId?: string;
 
@@ -32,7 +57,7 @@ export class ServerPermissions {
   /**
    * Check if user has a specific permission in the organization
    */
-  hasPermission(permission: string, orgId?: string): boolean {
+  hasPermission(permission: Permissions, orgId?: string): boolean {
     const org = this.getOrgMemberInfo(orgId);
     if (!org) return false;
     return org.hasPermission(permission);
@@ -41,7 +66,7 @@ export class ServerPermissions {
   /**
    * Check if user has a specific role in the organization
    */
-  hasRole(role: string, orgId?: string): boolean {
+  hasRole(role: UserRole, orgId?: string): boolean {
     const org = this.getOrgMemberInfo(orgId);
     if (!org) return false;
     return org.isRole(role);
@@ -50,7 +75,7 @@ export class ServerPermissions {
   /**
    * Check if user has at least a specific role in the organization (hierarchical)
    */
-  hasAtLeastRole(role: string, orgId?: string): boolean {
+  hasAtLeastRole(role: UserRole, orgId?: string): boolean {
     const org = this.getOrgMemberInfo(orgId);
     if (!org) return false;
     return org.isAtLeastRole(role);
@@ -59,7 +84,7 @@ export class ServerPermissions {
   /**
    * Check if user has any of the specified permissions
    */
-  hasAnyPermission(permissions: string[], orgId?: string): boolean {
+  hasAnyPermission(permissions: Permissions[], orgId?: string): boolean {
     return permissions.some((permission) =>
       this.hasPermission(permission, orgId)
     );
@@ -68,7 +93,7 @@ export class ServerPermissions {
   /**
    * Check if user has all of the specified permissions
    */
-  hasAllPermissions(permissions: string[], orgId?: string): boolean {
+  hasAllPermissions(permissions: Permissions[], orgId?: string): boolean {
     const org = this.getOrgMemberInfo(orgId);
     if (!org) return false;
     return org.hasAllPermissions(permissions);
@@ -84,361 +109,64 @@ export class ServerPermissions {
 
   // ===== CONVENIENCE ROLE CHECKS =====
 
-  isAirstrideAdmin(orgId?: string): boolean {
-    return this.hasRole("AIRSTRIDE_ADMIN", orgId);
-  }
-
-  isVendorAdmin(orgId?: string): boolean {
-    return this.hasRole("VENDOR_ADMIN", orgId);
-  }
-
-  isVendorUser(orgId?: string): boolean {
-    return this.hasRole("VENDOR_USER", orgId);
-  }
-
-  isPartnerAdmin(orgId?: string): boolean {
-    return this.hasRole("PARTNER_ADMIN", orgId);
-  }
-
-  isPartnerUser(orgId?: string): boolean {
-    return this.hasRole("PARTNER_USER", orgId);
-  }
-
-  // Role group checks
-  isVendor(orgId?: string): boolean {
-    return (
-      this.hasRole("VENDOR_ADMIN", orgId) || this.hasRole("VENDOR_USER", orgId)
-    );
-  }
-
-  isPartner(orgId?: string): boolean {
-    return (
-      this.hasRole("PARTNER_ADMIN", orgId) ||
-      this.hasRole("PARTNER_USER", orgId)
-    );
+  isGrowthmindAdmin(orgId?: string): boolean {
+    return this.hasRole(UserRole.GROWTHMIND_ADMIN, orgId);
   }
 
   isAdmin(orgId?: string): boolean {
-    return (
-      this.hasRole("AIRSTRIDE_ADMIN", orgId) ||
-      this.hasRole("VENDOR_ADMIN", orgId) ||
-      this.hasRole("PARTNER_ADMIN", orgId)
-    );
+    return this.hasRole(UserRole.ADMIN, orgId);
   }
 
   // ===== CONVENIENCE PERMISSION CHECKS =====
+  // These methods are enforced by the PermissionMethods type
+  // When you add a new permission to the Permissions enum, you MUST add a corresponding method here
 
-  // File & Collaboration permissions
-  canUploadFiles(orgId?: string): boolean {
-    return this.hasPermission("UPLOAD_FILES", orgId);
+  canReadClients(orgId?: string): boolean {
+    return this.hasPermission(Permissions.READ_CLIENTS, orgId);
   }
 
-  canAssignFilePermissions(orgId?: string): boolean {
-    return this.hasPermission("ASSIGN_FILE_PERMISSIONS", orgId);
+  canWriteClients(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_CLIENTS, orgId);
   }
 
-  canViewFiles(orgId?: string): boolean {
-    return this.hasPermission("VIEW_FILES", orgId);
+  canWriteInvite(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_INVITE, orgId);
   }
 
-  canWriteFiles(orgId?: string): boolean {
-    return this.hasPermission("WRITE_FILES", orgId);
+  canWriteApiKeys(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_API_KEYS, orgId);
   }
 
-  canDeleteFiles(orgId?: string): boolean {
-    return this.hasPermission("DELETE_FILES", orgId);
+  canWriteUserRoles(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_USER_ROLES, orgId);
   }
 
-  canManageFiles(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_FILES", orgId);
+  canWriteOrganisations(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_ORGANISATIONS, orgId);
   }
 
-  canReadFile(orgId?: string): boolean {
-    return this.hasPermission("READ_FILE", orgId);
+  canReadOrganisations(orgId?: string): boolean {
+    return this.hasPermission(Permissions.READ_ORGANISATIONS, orgId);
   }
 
-  canWriteFile(orgId?: string): boolean {
-    return this.hasPermission("WRITE_FILE", orgId);
+  canReadUsers(orgId?: string): boolean {
+    return this.hasPermission(Permissions.READ_USERS, orgId);
   }
 
-  // Folder permissions
-  canViewFolders(orgId?: string): boolean {
-    return this.hasPermission("VIEW_FOLDERS", orgId);
+  canWriteUsers(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_USERS, orgId);
   }
 
-  canWriteFolder(orgId?: string): boolean {
-    return this.hasPermission("WRITE_FOLDER", orgId);
+  canWriteUserPasswords(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_USER_PASSWORDS, orgId);
   }
 
-  canCreateFolders(orgId?: string): boolean {
-    return this.hasPermission("CREATE_FOLDERS", orgId);
-  }
-
-  canDeleteFolders(orgId?: string): boolean {
-    return this.hasPermission("DELETE_FOLDERS", orgId);
-  }
-
-  canManageFolders(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_FOLDERS", orgId);
-  }
-
-  canReadFolder(orgId?: string): boolean {
-    return this.hasPermission("READ_FOLDER", orgId);
-  }
-
-  // Deal permissions
-  canSubmitDeals(orgId?: string): boolean {
-    return this.hasPermission("SUBMIT_DEALS", orgId);
-  }
-
-  canApproveDeals(orgId?: string): boolean {
-    return this.hasPermission("APPROVE_DEALS", orgId);
-  }
-
-  canRejectDeals(orgId?: string): boolean {
-    return this.hasPermission("REJECT_DEALS", orgId);
-  }
-
-  canViewDeals(orgId?: string): boolean {
-    return this.hasPermission("VIEW_DEALS", orgId);
-  }
-
-  canEditDeals(orgId?: string): boolean {
-    return this.hasPermission("EDIT_DEALS", orgId);
-  }
-
-  canManageDeals(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_DEALS", orgId);
-  }
-
-  canUploadDealDocuments(orgId?: string): boolean {
-    return this.hasPermission("UPLOAD_DEAL_DOCUMENTS", orgId);
-  }
-
-  canViewDealDocuments(orgId?: string): boolean {
-    return this.hasPermission("VIEW_DEAL_DOCUMENTS", orgId);
-  }
-
-  // User management permissions
-  canInviteUsers(orgId?: string): boolean {
-    return this.hasPermission("INVITE_USERS", orgId);
-  }
-
-  canRemoveUsers(orgId?: string): boolean {
-    return this.hasPermission("REMOVE_USERS", orgId);
-  }
-
-  canManageUsers(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_USERS", orgId);
-  }
-
-  canViewUsers(orgId?: string): boolean {
-    return this.hasPermission("VIEW_USERS", orgId);
-  }
-
-  canEditUserRoles(orgId?: string): boolean {
-    return this.hasPermission("EDIT_USER_ROLES", orgId);
-  }
-
-  // Analytics permissions
-  canViewAnalytics(orgId?: string): boolean {
-    return this.hasPermission("VIEW_ANALYTICS", orgId);
-  }
-
-  canEditAnalytics(orgId?: string): boolean {
-    return this.hasPermission("EDIT_ANALYTICS", orgId);
-  }
-
-  canManageAnalytics(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_ANALYTICS", orgId);
-  }
-
-  canExportAnalytics(orgId?: string): boolean {
-    return this.hasPermission("EXPORT_ANALYTICS", orgId);
-  }
-
-  canAccessAnalytics(orgId?: string): boolean {
-    return this.hasPermission("ACCESS_ANALYTICS", orgId);
-  }
-
-  // Partner management permissions
-  canViewPartnerDirectory(orgId?: string): boolean {
-    return this.hasPermission("VIEW_PARTNER_DIRECTORY", orgId);
-  }
-
-  canUseOutreachTools(orgId?: string): boolean {
-    return this.hasPermission("USE_OUTREACH_TOOLS", orgId);
-  }
-
-  canEditOrgProfile(orgId?: string): boolean {
-    return this.hasPermission("EDIT_ORG_PROFILE", orgId);
-  }
-
-  canManagePartners(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_PARTNERS", orgId);
-  }
-
-  canViewPartners(orgId?: string): boolean {
-    return this.hasPermission("VIEW_PARTNERS", orgId);
-  }
-
-  canCreatePartners(orgId?: string): boolean {
-    return this.hasPermission("CREATE_PARTNERS", orgId);
-  }
-
-  canDeletePartners(orgId?: string): boolean {
-    return this.hasPermission("DELETE_PARTNERS", orgId);
-  }
-
-  canAccessPartnerLists(orgId?: string): boolean {
-    return this.hasPermission("ACCESS_PARTNER_LISTS", orgId);
-  }
-
-  canManagePartnerLists(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_PARTNER_LISTS", orgId);
-  }
-
-  // Settings permissions
-  canViewSettings(orgId?: string): boolean {
-    return this.hasPermission("VIEW_SETTINGS", orgId);
-  }
-
-  canEditSettings(orgId?: string): boolean {
-    return this.hasPermission("EDIT_SETTINGS", orgId);
-  }
-
-  canManageSettings(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_SETTINGS", orgId);
-  }
-
-  canAccessSystemSettings(orgId?: string): boolean {
-    return this.hasPermission("ACCESS_SYSTEM_SETTINGS", orgId);
-  }
-
-  canManageSystemSettings(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_SYSTEM_SETTINGS", orgId);
-  }
-
-  // Organization permissions
-  canViewOrganization(orgId?: string): boolean {
-    return this.hasPermission("VIEW_ORGANIZATION", orgId);
-  }
-
-  canEditOrganization(orgId?: string): boolean {
-    return this.hasPermission("EDIT_ORGANIZATION", orgId);
-  }
-
-  canManageOrganization(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_ORGANIZATION", orgId);
-  }
-
-  canDeleteOrganization(orgId?: string): boolean {
-    return this.hasPermission("DELETE_ORGANIZATION", orgId);
-  }
-
-  // Marketplace permissions
-  canAccessMarketplace(orgId?: string): boolean {
-    return this.hasPermission("ACCESS_MARKETPLACE", orgId);
-  }
-
-  canViewMarketplace(orgId?: string): boolean {
-    return this.hasPermission("VIEW_MARKETPLACE", orgId);
-  }
-
-  canManageMarketplace(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_MARKETPLACE", orgId);
-  }
-
-  canPublishToMarketplace(orgId?: string): boolean {
-    return this.hasPermission("PUBLISH_TO_MARKETPLACE", orgId);
-  }
-
-  // Task permissions
-  canViewTasks(orgId?: string): boolean {
-    return this.hasPermission("VIEW_TASKS", orgId);
-  }
-
-  canCreateTasks(orgId?: string): boolean {
-    return this.hasPermission("CREATE_TASKS", orgId);
-  }
-
-  canEditTasks(orgId?: string): boolean {
-    return this.hasPermission("EDIT_TASKS", orgId);
-  }
-
-  canDeleteTasks(orgId?: string): boolean {
-    return this.hasPermission("DELETE_TASKS", orgId);
-  }
-
-  canManageTasks(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_TASKS", orgId);
-  }
-
-  canAssignTasks(orgId?: string): boolean {
-    return this.hasPermission("ASSIGN_TASKS", orgId);
-  }
-
-  // Collaboration permissions
-  canComment(orgId?: string): boolean {
-    return this.hasPermission("COMMENT", orgId);
-  }
-
-  canViewComments(orgId?: string): boolean {
-    return this.hasPermission("VIEW_COMMENTS", orgId);
-  }
-
-  canEditComments(orgId?: string): boolean {
-    return this.hasPermission("EDIT_COMMENTS", orgId);
-  }
-
-  canDeleteComments(orgId?: string): boolean {
-    return this.hasPermission("DELETE_COMMENTS", orgId);
-  }
-
-  canManageComments(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_COMMENTS", orgId);
-  }
-
-  canManageCollaborationFiles(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_COLLABORATION_FILES", orgId);
-  }
-
-  canManageCollaborationFolders(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_COLLABORATION_FOLDERS", orgId);
-  }
-
-  // Reporting permissions
-  canViewReports(orgId?: string): boolean {
-    return this.hasPermission("VIEW_REPORTS", orgId);
-  }
-
-  canCreateReports(orgId?: string): boolean {
-    return this.hasPermission("CREATE_REPORTS", orgId);
-  }
-
-  canEditReports(orgId?: string): boolean {
-    return this.hasPermission("EDIT_REPORTS", orgId);
-  }
-
-  canDeleteReports(orgId?: string): boolean {
-    return this.hasPermission("DELETE_REPORTS", orgId);
-  }
-
-  canExportReports(orgId?: string): boolean {
-    return this.hasPermission("EXPORT_REPORTS", orgId);
-  }
-
-  // Billing permissions
   canViewBilling(orgId?: string): boolean {
-    return this.hasPermission("VIEW_BILLING", orgId);
+    return this.hasPermission(Permissions.VIEW_BILLING, orgId);
   }
 
-  canManageBilling(orgId?: string): boolean {
-    return this.hasPermission("MANAGE_BILLING", orgId);
-  }
-
-  canViewInvoices(orgId?: string): boolean {
-    return this.hasPermission("VIEW_INVOICES", orgId);
+  canWriteBilling(orgId?: string): boolean {
+    return this.hasPermission(Permissions.WRITE_BILLING, orgId);
   }
 
   // ===== ORGANIZATION-SPECIFIC FUNCTIONS =====
@@ -455,21 +183,21 @@ export class ServerPermissions {
   /**
    * Check if user has permission in any organization they belong to
    */
-  canInAnyOrg(permission: string): boolean {
+  canInAnyOrg(permission: Permissions): boolean {
     return this.user.getOrgs().some((org) => org.hasPermission(permission));
   }
 
   /**
    * Check if user has role in any organization they belong to
    */
-  hasRoleInAnyOrg(role: string): boolean {
+  hasRoleInAnyOrg(role: UserRole): boolean {
     return this.user.getOrgs().some((org) => org.isRole(role));
   }
 
   /**
    * Get all organizations where user has specific permission
    */
-  getAllOrgsWithPermission(permission: string): string[] {
+  getAllOrgsWithPermission(permission: Permissions): string[] {
     return this.user
       .getOrgs()
       .filter((org) => org.hasPermission(permission))
@@ -479,7 +207,7 @@ export class ServerPermissions {
   /**
    * Get all organizations where user has specific role
    */
-  getAllOrgsWithRole(role: string): string[] {
+  getAllOrgsWithRole(role: UserRole): string[] {
     return this.user
       .getOrgs()
       .filter((org) => org.isRole(role))
@@ -523,11 +251,11 @@ export class ServerPermissions {
  * Used by API HOFs like withAuth to enforce permissions
  */
 export type PermissionConfig = {
-  requiredPermissions?: string[];
-  anyPermissions?: string[];
-  allPermissions?: string[];
-  requiredRoles?: string[];
-  anyRoles?: string[];
+  requiredPermissions?: Permissions[];
+  anyPermissions?: Permissions[];
+  allPermissions?: Permissions[];
+  requiredRoles?: UserRole[];
+  anyRoles?: UserRole[];
   customCheck?: (permissions: ServerPermissions) => boolean;
 };
 

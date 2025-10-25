@@ -42,6 +42,7 @@ import {
   AIModel,
   TemperaturePreset,
   type GenerateStructuredStreamResult,
+  MaxTokensPreset,
 } from "@/shared/ai-sdk";
 import { logger } from "@/shared/utils/logger";
 import {
@@ -128,9 +129,9 @@ export class ClientsService extends BaseService<
         schema: AIExtractedContextSchema,
         config: {
           provider: AIProvider.GOOGLE,
-          model: AIModel.GEMINI_2_5_FLASH,
+          model: AIModel.GEMINI_2_5_PRO, // Cheapest model
           temperature: TemperaturePreset.PRECISE, // 0.3 for factual extraction
-          maxTokens: 4096,
+          maxTokens: MaxTokensPreset.EXTENDED, // Increased for comprehensive research output
         },
       });
 
@@ -186,9 +187,9 @@ export class ClientsService extends BaseService<
         schema: AIExtractedContextSchema,
         config: {
           provider: AIProvider.GOOGLE,
-          model: AIModel.GEMINI_2_5_FLASH,
+          model: AIModel.GEMINI_2_5_FLASH_LITE, // Cheapest model
           temperature: TemperaturePreset.PRECISE, // 0.3 for factual extraction
-          maxTokens: 4096,
+          maxTokens: MaxTokensPreset.EXTENDED, // Increased for comprehensive research output
           enableProgressEvents: true,
           progressMessages: {
             search: `🔍 Researching ${websiteUrl}...`,
@@ -231,74 +232,82 @@ export class ClientsService extends BaseService<
   }
 
   /**
-   * Build comprehensive research prompt for AI - GROWTH HACKER EDITION
-   * Extracts everything needed for a data-driven 30-day growth strategy
+   * Build comprehensive research prompt for AI - MARKETING INTELLIGENCE EDITION
+   * Extracts marketing data points to understand founder's business and current state
    */
   private buildResearchPrompt(websiteUrl: string): string {
     // Extract domain from URL for search hints
     const domain = websiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-    return `You are an elite growth hacker and business analyst conducting COMPREHENSIVE competitive intelligence and growth strategy research.
+    return `You are a marketing intelligence analyst conducting comprehensive research on an early-stage startup to understand their current marketing state, resources, and opportunities.
 
 **MISSION:**
-Research ${websiteUrl} and extract EVERYTHING needed to build a killer 30-day growth marketing strategy. This means: company basics, competitive landscape, current performance, content strategy, tech stack, resources, and conversion funnel.
+Research ${websiteUrl} to build a complete picture of this founder's business, marketing presence, and growth stage. Focus on actionable marketing data points that reveal where they are today and what opportunities exist.
 
 **CRITICAL SEARCH STRATEGY:**
 Execute these searches systematically (use web search for ALL of these):
 
-**1. COMPANY BASICS:**
+**1. COMPANY FUNDAMENTALS:**
 - "${domain}" (main website)
 - "about ${domain}"
 - "${domain} company"
+- "${domain} founder" OR "${domain} team"
 - "${domain} linkedin company page"
 - "${domain} crunchbase" OR "${domain} funding"
-- "${domain} team size"
+- "${domain} launch" OR "${domain} started"
 
-**2. COMPETITIVE INTELLIGENCE:**
-- "${domain} competitors"
-- "${domain} vs [competitor name]" (find top 3-5 competitors)
-- "${domain} alternative"
-- "best ${domain} alternatives"
-- "${domain} comparison"
-- Search SimilarWeb/Ahrefs data for competitor traffic
+**2. MARKET POSITIONING:**
+- "${domain} what is"
+- "${domain} pricing"
+- "${domain} for [industry/persona]"
+- Look at homepage messaging, value props, and taglines
+- Identify who they're targeting and what problems they solve
 
-**3. PERFORMANCE & TRAFFIC:**
-- "site:${domain} analytics"
+**3. MARKETING PERFORMANCE & METRICS:**
 - "${domain} traffic statistics"
 - "${domain} similarweb"
 - "${domain} monthly visitors"
 - "${domain} SEO ranking"
 - "${domain} top pages" OR "site:${domain} most popular"
+- Look for any public metrics they've shared (MRR, users, downloads, etc.)
 
-**4. CONTENT INVENTORY:**
+**4. CONTENT & CHANNEL PRESENCE:**
 - "site:${domain}/blog"
 - "site:${domain}/resources"
-- "site:${domain}/case-studies"
-- "${domain} content marketing"
-- "${domain} blog publishing frequency"
-- Count blog posts, case studies, whitepapers, videos
+- "${domain} blog"
+- Count: blog posts, resources, videos, podcasts
+- Check publishing frequency and recency
+- Identify main content themes and topics
 
-**5. TECH STACK & TOOLS:**
+**5. SOCIAL MEDIA & COMMUNITY:**
+- "${domain} twitter" OR "${domain} x.com"
+- "${domain} linkedin"
+- "${domain} youtube"
+- "${domain} instagram"
+- "${domain} facebook"
+- Look at follower counts, engagement, posting frequency
+- Check for community presence (Slack, Discord, forums)
+
+**6. MARKETING TECH STACK:**
 - "${domain} builtwith" OR "${domain} technology stack"
-- "${domain} uses [CMS/tool]"
-- Check for: Webflow, WordPress, Contentful, HubSpot, Salesforce, etc.
-- Look for analytics tools (GA4, Plausible, Mixpanel)
-- Email platforms (Mailchimp, SendGrid, Customer.io)
-- SEO tools mentions
+- Look for: CMS (Webflow, WordPress, Framer, Wix, etc.)
+- Analytics (GA4, Plausible, Mixpanel, etc.)
+- Email tools (Mailchimp, ConvertKit, Beehiiv, etc.)
+- Marketing automation (HubSpot, ActiveCampaign, etc.)
+- SEO tools, chat widgets, A/B testing tools
 
-**6. TEAM & RESOURCES:**
+**7. TEAM & RESOURCES:**
 - "${domain} team size"
 - "${domain} employees"
 - "${domain} linkedin" (check company page for headcount)
 - "${domain} careers" OR "${domain} hiring"
-- Look for marketing team size indicators
+- Identify if they have dedicated marketing, content, or design roles
+- Look for signs of founder-led marketing vs. dedicated team
 
-**7. CONVERSION FUNNEL:**
-- Main CTAs on homepage
-- "site:${domain}/pricing"
-- "site:${domain}/demo"
-- "site:${domain}/signup" OR "site:${domain}/trial"
-- Lead magnets (ebooks, webinars, tools)
+**8. COMPETITIVE LANDSCAPE (Light Touch):**
+- "${domain} alternative"
+- Identify 2-3 main competitors (name and URL only)
+- No deep analysis needed - just awareness of the space
 
 **EXTRACTION INSTRUCTIONS:**
 
@@ -306,116 +315,167 @@ Execute these searches systematically (use web search for ALL of these):
 - Company name (from website, meta tags, domain)
 - Industry and market vertical
 - Company stage (pre-seed → public) - check funding announcements
-- Product description (what they do, core value prop)
-- Key features (list 5-10 main capabilities)
-- Social media presence (LinkedIn, Twitter, Facebook, Instagram, YouTube, blog URL)
-- Website description (meta description, tagline)
+- Product description (what they do, core value prop in 2-3 sentences)
+- Key features (list 5-10 main capabilities or product features)
+- Website description (meta description, tagline from homepage)
+- Social media presence (LinkedIn, Twitter/X, Facebook, Instagram, YouTube, blog URL)
+- Pricing model (free, freemium, subscription, one-time, enterprise - if visible)
 
-### 2. COMPETITOR INTELLIGENCE (Research Thoroughly!)
-**Find 3-5 main competitors and for EACH extract:**
+### 2. LIGHT COMPETITOR AWARENESS (Don't Over-Index Here)
+**Find 2-3 competitors if obvious:**
 - Competitor name
 - Website URL
-- Positioning statement (how they position vs this company)
-- Strengths (what they do better - 2-3 points)
-- Weaknesses (gaps to exploit - 2-3 points)
-- Estimated monthly traffic (from SimilarWeb data if available)
+- Brief positioning (1 sentence on how they differ)
 
-**CRITICAL:** This data is GOLD for growth strategy. Search extensively!
+**NOTE:** This is NOT the focus. Only include if competitors are obvious and easy to find.
 
-### 3. CURRENT PERFORMANCE METRICS (Infer from available data)
-- Monthly traffic estimate (from SimilarWeb, Ahrefs mentions, or infer from content volume)
-- Traffic sources breakdown (Organic, Direct, Referral, Social, Paid - percentages)
-- Top performing pages (most linked, most mentioned URLs)
-- Top SEO keywords (what they rank for - from Ahrefs/SEMrush data or infer)
-- Bounce rate (if mentioned anywhere)
-- Average session duration (if mentioned)
-- Monthly leads estimate (infer from scale indicators)
-- Conversion rate (if publicly mentioned - rare but check case studies)
+### 3. MARKETING PERFORMANCE METRICS (Critical for Early-Stage Context!)
+- Monthly traffic estimate (from SimilarWeb, Ahrefs, or infer from signals)
+- Traffic sources breakdown (Organic %, Direct %, Referral %, Social %, Paid %)
+- Top performing pages (homepage, pricing, blog posts with most traction)
+- Top SEO keywords (what they rank for - if data available)
+- Social media metrics:
+  - Twitter/X followers + engagement level
+  - LinkedIn followers + posting frequency
+  - YouTube subscribers (if applicable)
+  - Instagram followers (if applicable)
+- Email list size indicators (if mentioned: "10K+ subscribers", etc.)
+- Public growth metrics (if mentioned: "used by X companies", "Y downloads", etc.)
 
-**Note:** Use confidence scoring appropriately - traffic data is often inferred.
+**IMPORTANT:** For early-stage startups, these metrics might be small or non-existent. That's valuable data!
 
-### 4. CONTENT INVENTORY (Count & Categorize)
-- Total blog posts (count from site:${domain}/blog search)
-- Total case studies (search for case study pages)
-- Total whitepapers/ebooks (search resources/downloads)
-- Total videos (YouTube channel, site:${domain}/video)
+### 4. CONTENT INVENTORY & STRATEGY (Count Everything!)
+- Total blog posts (count from site:${domain}/blog or blog page)
+- Total resources (ebooks, guides, templates, tools)
+- Total case studies or customer stories
+- Total videos (YouTube or embedded)
 - Total podcasts (if they have one)
-- Top performing content URLs (most shared/linked)
-- Publishing frequency ("2x/week", "weekly", "monthly", "sporadic")
-- Last published date (check latest blog post date)
-- Content themes (main topics they cover - 3-5 themes)
+- Publishing frequency:
+  - Blog: "3x/week", "weekly", "bi-weekly", "monthly", "sporadic", "inactive"
+  - Social: "daily", "2-3x/week", "weekly", "sporadic"
+- Last published date (when was latest content published?)
+- Content themes (main topics: "SEO guides", "Product updates", "Industry trends", etc.)
+- Content quality signals (depth, polish, engagement indicators)
 
-### 5. MARKETING TECH STACK (Detective Work!)
-- CMS platform (Webflow, WordPress, Contentful, Wix, Squarespace, Custom)
-- Analytics tools (Google Analytics 4, Plausible, Mixpanel, Amplitude)
-- Email platform (Mailchimp, SendGrid, Customer.io, Klaviyo, ConvertKit)
-- CRM system (HubSpot, Salesforce, Pipedrive, Close)
-- Social scheduling (Buffer, Hootsuite, Later, Sprout Social)
-- Marketing automation (Marketo, Pardot, ActiveCampaign, Autopilot)
-- SEO tools mentioned (Ahrefs, SEMrush, Moz)
-- Other tools (chat widgets, A/B testing, heatmaps, etc.)
+### 5. MARKETING TECH STACK (What Tools Are They Using?)
+- CMS platform (Webflow, WordPress, Framer, Contentful, Wix, Squarespace, Next.js, Custom)
+- Analytics tools (Google Analytics 4, Plausible, Mixpanel, Amplitude, Fathom)
+- Email platform (Mailchimp, SendGrid, ConvertKit, Beehiiv, Klaviyo, Customer.io)
+- CRM system (HubSpot, Salesforce, Pipedrive, Close, Notion)
+- Marketing automation (HubSpot, ActiveCampaign, Marketo, etc.)
+- Social scheduling (Buffer, Hootsuite, Later, Typefully)
+- SEO tools (Ahrefs, SEMrush, Moz - look for mentions)
+- Other tools (chat widgets like Intercom, A/B testing, heatmaps, forms)
 
-**Search for:** BuiltWith data, tool mentions in blog posts, integrations pages
+**Search for:** BuiltWith data, tool mentions in blog/docs, integrations page, footer badges
 
-### 6. TEAM & RESOURCES (LinkedIn is key!)
-- Total team size (from LinkedIn company page, About page, careers page)
-- Marketing team size (estimate from LinkedIn job titles)
-- Content writers (how many content creators? Check LinkedIn)
-- Has in-house design? (boolean - check for design roles)
-- Has in-house dev? (boolean - check for engineering team)
-- Monthly marketing budget (rarely public - only include if explicitly mentioned)
-- Paid ad budget (rarely public - only if mentioned)
-- Content budget (rarely public - only if mentioned)
+### 6. TEAM & RESOURCES (Critical for Understanding Capacity!)
+- Total team size (from LinkedIn, About page, careers page)
+- Founder-led? (Is this still founder doing marketing? Look for founder activity on social)
+- Marketing team size (look for marketing, growth, or content roles on LinkedIn)
+- Content team size (content writers, creators, designers)
+- Has in-house design? (boolean)
+- Has in-house dev? (boolean)
+- Marketing maturity indicators:
+  - "Solo founder doing everything"
+  - "Founder + 1-2 helping with content"
+  - "Dedicated marketer/growth person"
+  - "Full marketing team (3+)"
+- Budget indicators (rarely public - only if explicitly mentioned)
 
-### 7. IDEAL CUSTOMER PROFILE (ICP) - Strategic Inference
-- Description (who is the product for?)
-- Pain points they solve (3-5 key problems)
-- Demographics (job titles, company sizes, industries)
-- Target company size ("startups", "SMBs", "enterprise", "10-50 employees")
-- Target industries (list 3-5 verticals they focus on)
+### 7. IDEAL CUSTOMER PROFILE (ICP) - Who Are They Targeting?
+- Description (who is the product built for? Be specific)
+- Target personas (job titles: "Founders", "Marketing Managers", "Developers", etc.)
+- Target company size ("solopreneurs", "startups (1-10)", "SMBs (10-50)", "mid-market (50-200)", "enterprise (200+)")
+- Target industries (list 2-5 verticals if applicable)
+- Pain points they solve (3-5 key problems based on messaging)
+- Use cases (how customers use the product)
 
-### 8. BUSINESS GOALS (Infer from messaging & positioning)
-- Traffic target (infer from current scale + growth messaging)
-- Leads target (infer from funnel indicators)
-- Revenue target (only if public - e.g., ARR mentioned)
-- Demo target (if they push demos)
-- Other goals (brand awareness, market education, etc.)
+### 8. BRAND VOICE & MESSAGING
+- Tone (professional, casual, technical, conversational, playful, authoritative, founder-voice)
+- Style (educational, sales-focused, storytelling, thought-leadership, community-driven)
+- Brand keywords (5-10 words/phrases they use frequently in messaging)
+- Unique angles (what makes their messaging different or memorable?)
 
-### 9. BRAND VOICE & STYLE
-- Tone (professional, casual, technical, conversational, playful, authoritative)
-- Style (educational, sales-driven, storytelling, thought-leadership)
-- Keywords they use frequently (5-10 brand keywords)
-- Brand guidelines (any explicit mentions of voice/style)
+### 9. CONVERSION & MONETIZATION STRATEGY
+- Primary CTA (main call-to-action: "Start Free Trial", "Get Started", "Book Demo", "Join Waitlist", "Download")
+- Conversion path (how do users become customers?)
+  - Self-service signup?
+  - Demo/sales call required?
+  - Waitlist/beta?
+  - Free tier → paid upgrade?
+- Lead magnets (free tools, ebooks, templates, calculators, etc.)
+- Pricing page presence (do they show pricing publicly?)
+- Trial/freemium available? (if yes, what's the model?)
 
-### 10. CONVERSION FUNNEL (Critical for growth!)
-- Awareness channels (where they drive traffic: SEO, Paid Ads, Social, Content, Partnerships)
-- Consideration assets (what moves prospects: Case Studies, Product Demo, Free Trial, Webinars, Ebooks)
-- Decision triggers (what closes deals: Pricing Page, Demo Call, Sales Contact, Free Trial Signup)
-- Primary CTA (main call-to-action: "Book a Demo", "Start Free Trial", "Get Started", "Contact Sales")
-- Conversion bottleneck (where people drop off - infer from funnel design)
-- Average sales cycle (if mentioned - days from first touch to close)
+### 10. MARKETING MATURITY ASSESSMENT (Strategic Insights!)
+Assess their marketing sophistication across these dimensions:
 
-### 11. CONFIDENCE SCORING
+**Content Marketing:**
+- "non-existent" (no blog/content)
+- "nascent" (few posts, sporadic)
+- "developing" (regular posts, 10-50 pieces)
+- "established" (100+ posts, consistent publishing)
+
+**SEO:**
+- "none" (no visible SEO effort)
+- "basic" (some keywords, basic meta tags)
+- "intermediate" (clear keyword strategy, decent rankings)
+- "advanced" (strong domain authority, top rankings)
+
+**Social Media:**
+- "inactive" (no presence or abandoned accounts)
+- "minimal" (accounts exist but low activity)
+- "active" (regular posting, some engagement)
+- "strong" (consistent posting, strong engagement, growing audience)
+
+**Email Marketing:**
+- "none" (no email capture visible)
+- "basic" (newsletter signup only)
+- "active" (regular newsletters, lead nurturing)
+- "sophisticated" (segmentation, automation, multi-touch sequences)
+
+**Paid Marketing:**
+- Look for signs: sponsored posts, ad creative, retargeting pixels
+- "none", "minimal", "active", "heavy"
+
+**Overall Marketing Stage:**
+- "pre-marketing" (product-focused, minimal marketing presence)
+- "founder-led" (founder driving awareness, no dedicated marketer)
+- "early-stage" (first marketing hire, building foundation)
+- "growth-stage" (team in place, multiple channels active)
+
+### 11. GROWTH OPPORTUNITIES & GAPS (What's Missing or Underutilized?)
+Identify quick wins and gaps:
+- Missing channels (e.g., "No blog despite good expertise")
+- Inactive channels (e.g., "Twitter account but last post 6 months ago")
+- Content gaps (e.g., "No case studies despite claiming 100+ customers")
+- SEO opportunities (e.g., "Good content but poor SEO optimization")
+- Conversion gaps (e.g., "Traffic but unclear CTA")
+- Consistency issues (e.g., "Strong start then publishing stopped")
+
+### 12. CONFIDENCE SCORING
 Rate confidence 0-1 for each category:
 - **overall**: Combined confidence across all data
-- **factual**: Confidence in hard facts (company name, features, URLs)
-- **inferred**: Confidence in strategic insights (ICP, goals, competitors)
+- **factual**: Confidence in hard facts (company name, features, URLs, team size)
+- **inferred**: Confidence in strategic insights (ICP, marketing maturity, opportunities)
 
 **Scoring Guidelines:**
-- 0.9-1.0: Public company with tons of data available
-- 0.7-0.8: Established company with good web presence
-- 0.5-0.6: Early-stage with limited public data
-- 0.3-0.4: Minimal information, heavy inference required
-- 0.0-0.2: Website doesn't exist or is parking page
+- 0.9-1.0: Established company with strong web presence and public data
+- 0.7-0.8: Active company with decent marketing footprint
+- 0.5-0.6: Early-stage with some presence but limited public data
+- 0.3-0.4: Very early-stage, minimal footprint, heavy inference needed
+- 0.0-0.2: Website is parking page, under construction, or non-existent
 
-### 12. RESEARCH NOTES
+### 13. RESEARCH NOTES
 Document your research process:
-- Website status (live, under construction, non-existent, parking)
-- What was factual vs inferred
-- Data gaps and ambiguities
-- Suggestions for manual review
-- Alternative sources used (LinkedIn, Crunchbase, BuiltWith, etc.)
-- Confidence caveats (e.g., "traffic estimate based on content volume")
+- Website status (live, under construction, non-existent, parking page)
+- What was factual vs. inferred
+- Data gaps and what's missing
+- Notable findings (anything surprising or particularly relevant)
+- Data sources used (LinkedIn, Crunchbase, BuiltWith, SimilarWeb, etc.)
+- Confidence caveats (e.g., "traffic estimate based on content volume and social signals")
+- Recommendations for follow-up research
 
 **OUTPUT FORMAT:**
 Return complete JSON matching the schema. For missing data:
@@ -423,18 +483,21 @@ Return complete JSON matching the schema. For missing data:
 - Use null/undefined for optional scalar fields
 - NEVER invent data - be honest about gaps
 - Use confidence scores to indicate data quality
+- Document what you couldn't find in research notes
 
 **SPECIAL CASES:**
-- **No website/parking page**: Return minimal data with 0.1 confidence
-- **Early-stage stealth**: Search for founder LinkedIn, press releases, limited data OK
-- **No competitor data**: Search harder - there are ALWAYS competitors
-- **No traffic data**: Infer from: content volume, social following, team size, funding
-- **No tech stack data**: Check BuiltWith, look for tool mentions in content
+- **No website/parking page**: Return minimal data with 0.1 confidence, note in research_notes
+- **Very early-stage/stealth**: Search for founder LinkedIn, any press/Product Hunt launches, limited data is OK
+- **Limited traffic data**: Infer from: content volume, social following, team size, funding stage
+- **No tech stack data**: Check BuiltWith, page source, look for tool badges/mentions
+- **Founder-led marketing**: This is common and valuable insight - document it clearly
 
 **YOUR GOAL:**
-Extract enough intelligence that a growth hacker can immediately build a data-driven 30-day strategy WITHOUT needing to research the company again.
+Extract enough marketing intelligence to understand where this founder is TODAY with their marketing, what resources they have, and what opportunities exist. This data will inform personalized strategy recommendations.
 
-Begin comprehensive research now. Leave NO stone unturned.`;
+Focus on ACTIONABLE DATA for early-stage startups. Be honest about gaps. Quality over quantity.
+
+Begin comprehensive research now.`;
   }
 
   /**

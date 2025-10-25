@@ -283,7 +283,20 @@ export class ClientFactory extends BaseFactory<
       // Growth strategy intelligence
       competitors: extractedContext.competitors,
       current_metrics: extractedContext.current_metrics,
-      content_inventory: extractedContext.content_inventory,
+      content_inventory: {
+        top_performing_content:
+          extractedContext.content_inventory?.top_performing_content ?? [],
+        content_themes:
+          extractedContext.content_inventory?.content_themes ?? [],
+        total_blog_posts:
+          extractedContext.content_inventory?.total_blog_posts ?? 0,
+        total_case_studies:
+          extractedContext.content_inventory?.total_case_studies ?? 0,
+        total_whitepapers:
+          extractedContext.content_inventory?.total_whitepapers ?? 0,
+        total_videos: extractedContext.content_inventory?.total_videos ?? 0,
+        total_podcasts: extractedContext.content_inventory?.total_podcasts ?? 0,
+      },
       tech_stack: extractedContext.tech_stack,
       resources: extractedContext.resources,
       conversion_funnel: extractedContext.conversion_funnel,

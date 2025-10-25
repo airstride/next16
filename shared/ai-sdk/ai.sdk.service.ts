@@ -21,7 +21,6 @@ import {
   type GenerateTextStreamResult,
   type GenerateWithToolsResult,
   type StreamEvent,
-  type StreamEventType,
   type StreamStructuredConfig,
   type ToolCallResult,
   type WebSearchConfig,
@@ -280,7 +279,10 @@ export class AISdkService {
 
     // Extract tool calls and steps from result
     const toolCalls: ToolCallResult[] = [];
-    const steps: Array<{ type: "text" | "tool-call"; content: string | ToolCallResult }> = [];
+    const steps: Array<{
+      type: "text" | "tool-call";
+      content: string | ToolCallResult;
+    }> = [];
 
     // Process tool calls if available
     if (result.steps) {
@@ -483,7 +485,9 @@ export class AISdkService {
     messages?: ConversationMessage[];
     schema: z.ZodType<T>;
     config?: WebSearchConfig & GenerateStructuredConfig;
-  }): Promise<GenerateStructuredResult<T> & { sources?: any; searchText: string }> {
+  }): Promise<
+    GenerateStructuredResult<T> & { sources?: any; searchText: string }
+  > {
     const { prompt, messages, schema, config = {} } = params;
 
     // Step 1: Web search to get context
@@ -575,7 +579,14 @@ export class AISdkService {
     const result = aiStreamObject(requestParams);
 
     return {
-      partialObjectStream: result.partialObjectStream,
+      partialObjectStream: new ReadableStream<Partial<T>>({
+        async start(controller) {
+          for await (const chunk of result.partialObjectStream) {
+            controller.enqueue(chunk as Partial<T>);
+          }
+          controller.close();
+        },
+      }),
       objectPromise: result.object.then((obj: any) => obj as T),
       usage: result.usage.then((usage: any) => ({
         promptTokens: usage.promptTokens || 0,
@@ -636,7 +647,9 @@ export class AISdkService {
     const enableProgressEvents = config.enableProgressEvents ?? true;
 
     // Create a TransformStream for progress events
-    let eventStreamController: ReadableStreamDefaultController<StreamEvent<T>> | null = null;
+    let eventStreamController: ReadableStreamDefaultController<
+      StreamEvent<T>
+    > | null = null;
     const eventStream = enableProgressEvents
       ? new ReadableStream<StreamEvent<T>>({
           start(controller) {
@@ -686,7 +699,8 @@ export class AISdkService {
         },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       emitEvent({
         type: EventType.ERROR,
         message: "Web search failed",
@@ -695,7 +709,11 @@ export class AISdkService {
         },
       });
       if (eventStreamController) {
-        eventStreamController.close();
+        (
+          eventStreamController as ReadableStreamDefaultController<
+            StreamEvent<T>
+          >
+        ).close();
       }
       throw error;
     }
@@ -737,7 +755,8 @@ export class AISdkService {
             controller.enqueue(value);
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           emitEvent({
             type: EventType.ERROR,
             message: "Extraction failed",
@@ -754,7 +773,9 @@ export class AISdkService {
     const enhancedObjectPromise = structuredStream.objectPromise.then((obj) => {
       emitEvent({
         type: EventType.COMPLETE,
-        message: config.progressMessages?.complete || "Research completed successfully!",
+        message:
+          config.progressMessages?.complete ||
+          "Research completed successfully!",
         data: obj,
         step: "complete",
         progress: 100,
@@ -925,7 +946,9 @@ export async function generateStructuredOutputWithWebSearch<T = any>(params: {
   messages?: ConversationMessage[];
   schema: z.ZodType<T>;
   config?: WebSearchConfig & GenerateStructuredConfig;
-}): Promise<GenerateStructuredResult<T> & { sources?: any; searchText: string }> {
+}): Promise<
+  GenerateStructuredResult<T> & { sources?: any; searchText: string }
+> {
   return aiSdkService.generateStructuredOutputWithWebSearch(params);
 }
 
