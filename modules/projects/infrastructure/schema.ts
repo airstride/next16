@@ -134,6 +134,84 @@ const projectDefinition = {
   current_mrr: { type: Number, min: 0 },
   current_arr: { type: Number, min: 0 },
 
+  // Competitor intelligence
+  competitors: [
+    {
+      name: { type: String, trim: true, required: true },
+      website: { type: String, trim: true },
+      positioning: { type: String, trim: true },
+      strengths: [{ type: String, trim: true }],
+      weaknesses: [{ type: String, trim: true }],
+      estimated_monthly_traffic: { type: Number, min: 0 },
+    },
+  ],
+
+  // Current performance metrics
+  current_metrics: {
+    monthly_traffic: { type: Number, min: 0 },
+    monthly_leads: { type: Number, min: 0 },
+    conversion_rate: { type: Number, min: 0, max: 1 },
+    cac: { type: Number, min: 0 },
+    ltv: { type: Number, min: 0 },
+    top_pages: [{ type: String, trim: true }],
+    top_keywords: [{ type: String, trim: true }],
+    traffic_sources: [
+      {
+        source: { type: String, trim: true },
+        percentage: { type: Number, min: 0, max: 100 },
+      },
+    ],
+    bounce_rate: { type: Number, min: 0, max: 1 },
+    avg_session_duration: { type: Number, min: 0 },
+  },
+
+  // Content inventory
+  content_inventory: {
+    total_blog_posts: { type: Number, min: 0 },
+    total_case_studies: { type: Number, min: 0 },
+    total_whitepapers: { type: Number, min: 0 },
+    total_videos: { type: Number, min: 0 },
+    total_podcasts: { type: Number, min: 0 },
+    top_performing_content: [{ type: String, trim: true }],
+    publishing_frequency: { type: String, trim: true },
+    last_published: { type: Date },
+    content_themes: [{ type: String, trim: true }],
+  },
+
+  // Marketing tech stack
+  tech_stack: {
+    cms: { type: String, trim: true },
+    analytics: [{ type: String, trim: true }],
+    email_platform: { type: String, trim: true },
+    crm: { type: String, trim: true },
+    social_scheduling: { type: String, trim: true },
+    marketing_automation: { type: String, trim: true },
+    seo_tools: [{ type: String, trim: true }],
+    other_tools: [{ type: String, trim: true }],
+  },
+
+  // Team and resource capacity
+  resources: {
+    total_team_size: { type: Number, min: 0 },
+    marketing_team_size: { type: Number, min: 0 },
+    content_writers: { type: Number, min: 0 },
+    has_in_house_design: { type: Boolean },
+    has_in_house_dev: { type: Boolean },
+    monthly_marketing_budget: { type: Number, min: 0 },
+    paid_ad_budget: { type: Number, min: 0 },
+    content_budget: { type: Number, min: 0 },
+  },
+
+  // Conversion funnel
+  conversion_funnel: {
+    awareness_channels: [{ type: String, trim: true }],
+    consideration_assets: [{ type: String, trim: true }],
+    decision_triggers: [{ type: String, trim: true }],
+    primary_cta: { type: String, trim: true },
+    conversion_bottleneck: { type: String, trim: true },
+    avg_sales_cycle_days: { type: Number, min: 0 },
+  },
+
   // Research metadata (AI-powered context)
   research_metadata: {
     status: {

@@ -178,7 +178,7 @@
   - [x] FormData support for file uploads
   - [x] Streaming response support with `readDataFromStream()`
   - [x] Enriched error objects with status, data, url, method
-  - [x] `/v2/` prefix for all requests (maps to API routes via next.config.mjs rewrite)
+  - [x] `/v1/` prefix for all requests (maps to API routes via next.config.mjs rewrite)
   - [x] Cache control support for GET requests
   - [x] Custom headers support
   - [x] TypeScript generics for response types
@@ -196,8 +196,33 @@
 #### Database agnostic repository pattern
   ....
 
-## Phase v0.1 — Strategy Generator
-**Goal:** Generate first 30-day plan (no automation)
+---
+
+# 🎯 DEVELOPMENT APPROACH: BACKEND-FIRST WITH INTEGRATION TESTS
+
+**Current Focus:** Build and validate backend APIs for v0.1, v0.2, and v0.3 via integration tests BEFORE any frontend development.
+
+## Development Order
+1. ✅ **Prerequisites & Infrastructure** - COMPLETE
+2. 🔄 **Phase v0.1 Backend** - Projects + Strategy modules with integration tests
+3. ⏳ **Phase v0.2 Backend** - Inngest event engine + Tasks module with integration tests
+4. ⏳ **Phase v0.3 Backend** - Content generation agents with integration tests
+5. ⏳ **Frontend Development** - Build UI after all backend is validated
+
+## Key Principles
+- ✅ Test via integration tests following `tests/integration/ai/partner.research.test.ts` pattern
+- ✅ Use real AI providers in tests for true integration validation
+- ✅ Test all API endpoints, workflows, and business logic
+- ✅ Validate with Airstride data before building UI
+- ❌ NO frontend work until backend is complete and tested
+
+---
+
+## Phase v0.1 — Strategy Generator (BACKEND ONLY)
+**Goal:** Generate first 30-day plan (no automation) - Backend + Integration Tests ONLY
+
+**Testing Philosophy:** All backend functionality must be validated via integration tests before building frontend.
+Use Jest integration tests following the pattern in `tests/integration/ai/partner.research.test.ts`.
 
 ### Projects Module (Context Ingestion)
 
@@ -224,6 +249,12 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [x] Current campaigns
   - [x] Marketing assets (URLs, social handles)
   - [x] Research metadata (researchStatus, researchedAt, researchSource)
+  - [x] **ENHANCED:** Competitors (name, website, positioning, strengths, weaknesses, traffic)
+  - [x] **ENHANCED:** Current metrics (traffic, leads, conversion rate, CAC, LTV, top pages/keywords, traffic sources)
+  - [x] **ENHANCED:** Content inventory (blog posts, case studies, whitepapers, videos, publishing frequency, themes)
+  - [x] **ENHANCED:** Tech stack (CMS, analytics, email, CRM, social scheduling, marketing automation, SEO tools)
+  - [x] **ENHANCED:** Resources (team size, marketing team, writers, in-house capabilities, budgets)
+  - [x] **ENHANCED:** Conversion funnel (awareness channels, consideration assets, decision triggers, primary CTA, bottleneck)
 - [x] Create Zod validation schemas in `modules/projects/validation.ts`
   - [x] Website URL input validation (for AI research trigger)
   - [x] AI-extracted context validation schema
@@ -238,6 +269,13 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
     - [x] Extract social handles and marketing assets
     - [x] Analyze brand voice from website content
     - [x] Infer business goals from website messaging
+    - [x] **ENHANCED PROMPT:** Comprehensive competitive intelligence extraction
+    - [x] **ENHANCED PROMPT:** Competitor analysis (3-5 competitors with positioning, strengths, weaknesses)
+    - [x] **ENHANCED PROMPT:** Performance metrics extraction (traffic, conversion data from SimilarWeb/Ahrefs)
+    - [x] **ENHANCED PROMPT:** Content inventory counting (blog posts, case studies, publishing frequency)
+    - [x] **ENHANCED PROMPT:** Tech stack detection (BuiltWith data, CMS, analytics, email platforms)
+    - [x] **ENHANCED PROMPT:** Team size research (LinkedIn company page data)
+    - [x] **ENHANCED PROMPT:** Conversion funnel mapping (CTAs, lead magnets, sales triggers)
   - [x] `createProjectFromWebsite(websiteUrl, userId)` - Research + create project
     - [x] Call `researchWebsite()` to get AI-extracted context
     - [x] Store extracted data in Projects schema
@@ -260,66 +298,131 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [x] All routes include proper ownership verification for user/org access control
   - [x] Fixed nativeEnum usage to z.enum with array values per project rules
 
-### Strategy Module (Plan Generation)
+#### Projects Module Integration Tests
+- [ ] Create test file: `tests/integration/projects/projects.test.ts`
+  - [ ] Test: Create project manually via API (POST /api/projects)
+    - [ ] Verify response structure matches schema
+    - [ ] Verify project is saved to database with correct ownership
+    - [ ] Verify audit fields (created_by, created_at)
+  - [ ] Test: Research website and create project (POST /api/projects/research)
+    - [ ] Test with real company website (e.g., "Shopify")
+    - [ ] Verify AI extracts company profile correctly
+    - [ ] Verify products array is populated
+    - [ ] Verify research metadata is set
+    - [ ] Add 90-second timeout for AI operations
+  - [ ] Test: Get project by ID (GET /api/projects/:id)
+    - [ ] Verify retrieval of created project
+    - [ ] Verify access control (user can only get own org's projects)
+  - [ ] Test: Update project (PATCH /api/projects/:id)
+    - [ ] Verify partial updates work
+    - [ ] Verify updated_at timestamp changes
+  - [ ] Test: Refine AI-extracted context (POST /api/projects/:id/refine)
+    - [ ] Verify user can override AI-extracted data
+  - [ ] Test: Delete project (DELETE /api/projects/:id)
+    - [ ] Verify soft delete (is_deleted flag)
+    - [ ] Verify deleted project not returned in list
+  - [ ] Test: List all projects (GET /api/projects)
+    - [ ] Verify pagination works
+    - [ ] Verify filtering by organization
+- [ ] Create test file: `tests/integration/projects/projects.service.test.ts`
+  - [ ] Test: AI website research with web search
+    - [ ] Mock or use real AI provider (prefer real for integration)
+    - [ ] Verify structured output format
+    - [ ] Test with multiple company types (SaaS, e-commerce, service)
+  - [ ] Test: Service layer business logic
+    - [ ] Verify prepareEntityForCreate adds correct defaults
+    - [ ] Verify mapEntityToResponse formats correctly
+
+### Strategy Module (Plan Generation - BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/strategy/schema.ts`
   - [ ] Plan metadata (projectId, createdAt, version)
   - [ ] Strategy pillars (narrative, channels, tactics)
   - [ ] 30-day content calendar
   - [ ] KPIs and success metrics
   - [ ] Status (draft, active, completed)
+  - [ ] Audit fields (created_by, updated_by, created_by_propel_auth_org_id)
 - [ ] Create Zod validation schemas in `modules/strategy/validation.ts`
-  - [ ] Plan generation input
-  - [ ] Plan output structure
-- [ ] Build AI provider abstraction in `shared/ai/provider.ts`
-  - [ ] Create base interface for AI providers
-  - [ ] Implement OpenAI adapter
-  - [ ] Implement Anthropic adapter
-  - [ ] Add provider switching logic
-  - [ ] Error handling and retries
+  - [ ] Plan generation input (projectId, optional overrides)
+  - [ ] Plan output structure (strategy pillars, calendar, KPIs)
+  - [ ] Plan response schema
+- [ ] Build AI provider abstraction (use existing ai-sdk)
+  - [ ] Verify `generateStructuredOutput()` supports strategy generation
+  - [ ] Create strategy prompt template in `lib/ai-sdk/prompts/`
+  - [ ] Create strategy schema in `lib/ai-sdk/schemas/strategy.schema.ts`
+  - [ ] Use AIProvider.ANTHROPIC or AIProvider.GOOGLE based on performance
 - [ ] Implement service layer in `modules/strategy/service.ts`
-  - [ ] `generatePlan(projectContext)` - Call AI to generate strategy
-  - [ ] `storePlan(plan)` - Save plan to database
+  - [ ] Extend BaseService<StrategyEntity, CreateStrategyRequest, UpdateStrategyRequest, StrategyResponse>
+  - [ ] `generatePlan(projectContext)` - Call AI to generate 30-day strategy
+    - [ ] Use `generateStructuredOutput()` from ai-sdk
+    - [ ] Pass project context (company profile, ICP, goals, brand voice)
+    - [ ] Temperature: 0.5-0.7 for balanced creativity
+    - [ ] Return structured plan with narrative, tactics, calendar
+  - [ ] `storePlan(plan)` - Save plan to database via repository
   - [ ] `getPlan(planId)` - Retrieve plan
-  - [ ] Create comprehensive prompt template for 30-day plan
-- [ ] Build API route in `app/api/strategy/route.ts`
-  - [ ] POST /api/strategy/generate - Generate new plan
-  - [ ] GET /api/strategy/:id - Get plan
+  - [ ] `getPlansByProject(projectId)` - Get all plans for a project
+  - [ ] Create comprehensive prompt template for 30-day plan generation
+- [ ] Create repository in `modules/strategy/repository.ts`
+  - [ ] Extend BaseRepository<StrategyEntity>
+  - [ ] Custom query methods if needed
+- [ ] Build API routes in `app/api/strategy/`
+  - [ ] POST /api/strategy/generate - Generate new plan from projectId
+    - [ ] Use withAuth, withDb, withValidation HOFs
+    - [ ] Validate projectId exists and user has access
+    - [ ] Call service.generatePlan()
+    - [ ] Return plan with 201 Created
+  - [ ] GET /api/strategy/:id - Get plan by ID
+    - [ ] Verify user has access to project
+  - [ ] GET /api/strategy?projectId=X - List plans for project
+    - [ ] Use query parser for pagination
+  - [ ] PATCH /api/strategy/:id - Update plan (for manual refinements)
+  - [ ] DELETE /api/strategy/:id - Soft delete plan
 
-### Frontend (Basic UI)
-- [ ] Create onboarding form page
-  - [ ] Company information inputs
-  - [ ] Product description textarea
-  - [ ] ICP definition fields
-  - [ ] Goals input (traffic, leads, revenue)
-  - [ ] Brand voice settings
-  - [ ] Submit handler
-- [ ] Create plan view page
-  - [ ] Display strategy pillars
-  - [ ] Show 30-day calendar in table/timeline format
-  - [ ] Display KPIs
-  - [ ] JSON export option
-  - [ ] Plan status indicator
+#### Strategy Module Integration Tests
+- [ ] Create test file: `tests/integration/strategy/strategy.test.ts`
+  - [ ] Test: Generate plan from project (POST /api/strategy/generate)
+    - [ ] First create a test project via Projects API
+    - [ ] Generate plan using projectId
+    - [ ] Verify AI returns structured plan with all required fields
+    - [ ] Verify plan includes strategy pillars
+    - [ ] Verify 30-day calendar is populated with tasks
+    - [ ] Verify KPIs are defined
+    - [ ] Add 90-120 second timeout for AI plan generation
+  - [ ] Test: Get plan by ID (GET /api/strategy/:id)
+    - [ ] Verify retrieval of generated plan
+    - [ ] Verify access control
+  - [ ] Test: List plans by project (GET /api/strategy?projectId=X)
+    - [ ] Verify all plans for project are returned
+    - [ ] Verify pagination
+  - [ ] Test: Update plan (PATCH /api/strategy/:id)
+    - [ ] Test manual refinement of AI-generated plan
+  - [ ] Test: Delete plan (DELETE /api/strategy/:id)
+    - [ ] Verify soft delete
+- [ ] Create test file: `tests/integration/strategy/strategy.service.test.ts`
+  - [ ] Test: AI plan generation with different project types
+    - [ ] SaaS company context
+    - [ ] E-commerce company context
+    - [ ] Service business context
+  - [ ] Test: Prompt engineering validation
+    - [ ] Verify plan quality for real company (e.g., Airstride)
+    - [ ] Verify calendar tasks are actionable
+    - [ ] Verify tactics are specific and relevant
 
-### Authentication
-- [x] Set up PropelAuth
-  - [x] Add PropelAuth configuration
-  - [x] Create auth service in `shared/auth/auth.service.ts`
-  - [ ] Create auth middleware (withAuth HOF)
-  - [ ] Protect API routes
-  - [ ] Add user context to requests
-
-### Testing & Validation
-- [ ] Test with Airstride as first customer
-  - [ ] Input Airstride context manually
-  - [ ] Generate first 30-day plan
-  - [ ] Review plan quality
-  - [ ] Iterate on prompt engineering
-- [ ] Document learnings for v0.2
+### v0.1 Success Criteria (Backend Only)
+- [ ] Projects API fully functional and tested
+- [ ] Strategy API fully functional and tested
+- [ ] AI website research works reliably
+- [ ] AI plan generation produces quality 30-day plans
+- [ ] All integration tests passing
+- [ ] Can test end-to-end via API calls (Postman/curl)
+- [ ] Airstride project can be created and plan generated
+- [ ] Document learnings and prompt iterations
 
 ---
 
-## Phase v0.2 — Task Engine 
-**Goal:** Event-driven architecture foundation
+## Phase v0.2 — Task Engine (BACKEND ONLY)
+**Goal:** Event-driven architecture foundation - Backend + Integration Tests ONLY
+
+**Testing Philosophy:** All Inngest event flows must be validated via integration tests. Test event emission, event handling, and complete workflows end-to-end.
 
 ### Inngest Setup
 - [ ] Configure Inngest client in `inngest/client.ts`
@@ -432,7 +535,7 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Structured logging (JSON)
   - [ ] Log levels (debug, info, warn, error)
   - [ ] Add request context to logs
-- [ ] Add error classes in `shared/utils/errors.ts`
+- [ ] Add error classes in `shared/utils/errors.ts` (already exists, verify completeness)
   - [ ] Custom error types (ValidationError, NotFoundError, etc.)
   - [ ] Error serialization for API responses
 - [ ] Set up event monitoring
@@ -440,33 +543,62 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Track event timing
   - [ ] Monitor event failures
 
-### Frontend Updates
-- [ ] Create task list dashboard
-  - [ ] Display all tasks from active plan
-  - [ ] Group by status (pending, review, completed)
-  - [ ] Show task details
-  - [ ] Manual status update buttons
-- [ ] Add event log viewer (optional)
-  - [ ] Show recent events
-  - [ ] Filter by event type
-  - [ ] View event payloads
+#### Tasks Module Integration Tests
+- [ ] Create test file: `tests/integration/tasks/tasks.test.ts`
+  - [ ] Test: Create task via API (POST /api/tasks)
+    - [ ] Verify task is saved to database
+    - [ ] Verify task links to correct plan
+  - [ ] Test: Get tasks by plan (GET /api/tasks?planId=X)
+    - [ ] Verify all tasks for plan are returned
+    - [ ] Verify filtering by status
+  - [ ] Test: Update task status (PATCH /api/tasks/:id)
+    - [ ] Verify status changes (pending → in_progress → review → completed)
+  - [ ] Test: Get task by ID (GET /api/tasks/:id)
+    - [ ] Verify access control
 
-### Testing
-- [ ] Test complete event flow
-  - [ ] Create project → verify `project.created` fires
-  - [ ] Verify plan auto-generates
-  - [ ] Verify `plan.generated` fires
-  - [ ] Verify tasks are created
-  - [ ] Verify `task.created` fires for each task
-- [ ] Test error handling
-  - [ ] What happens if AI fails?
-  - [ ] What happens if event fails?
-  - [ ] Retry logic verification
+#### Inngest Integration Tests
+- [ ] Create test file: `tests/integration/inngest/event-flow.test.ts`
+  - [ ] Test: Complete event flow end-to-end
+    - [ ] Create project → verify `project.created` event fires
+    - [ ] Verify plan auto-generates from event
+    - [ ] Verify `plan.generated` event fires
+    - [ ] Verify tasks are created from plan
+    - [ ] Verify `task.created` event fires for each task
+    - [ ] Add generous timeout (3-5 minutes) for complete flow
+  - [ ] Test: Event idempotency
+    - [ ] Send duplicate `project.created` event
+    - [ ] Verify only one plan is generated
+    - [ ] Verify eventId deduplication works
+  - [ ] Test: Error handling and retries
+    - [ ] Simulate AI failure in plan generation
+    - [ ] Verify retry logic kicks in
+    - [ ] Verify error events are logged
+  - [ ] Test: Event metadata and correlation
+    - [ ] Verify correlationId traces across related events
+    - [ ] Verify source and userId are preserved
+- [ ] Create test file: `tests/integration/inngest/concurrency.test.ts`
+  - [ ] Test: Concurrent project creation
+    - [ ] Create multiple projects simultaneously
+    - [ ] Verify concurrency limits are respected
+    - [ ] Verify no race conditions in task creation
+
+### v0.2 Success Criteria (Backend Only)
+- [ ] Events flow end-to-end: project → plan → tasks
+- [ ] All events are type-safe with BaseEvent
+- [ ] Inngest functions are idempotent
+- [ ] Event deduplication works correctly
+- [ ] Concurrency limits prevent overload
+- [ ] All integration tests passing
+- [ ] Can observe events in Inngest dashboard (dev server)
+- [ ] Error handling and retries work as expected
+- [ ] Documentation updated with event patterns
 
 ---
 
-## Phase v0.3 — Execution Agents 
-**Goal:** Human-in-the-loop execution
+## Phase v0.3 — Execution Agents (BACKEND ONLY)
+**Goal:** Human-in-the-loop execution - Backend + Integration Tests ONLY
+
+**Testing Philosophy:** All content generation agents must be validated via integration tests. Test AI content quality, agent reliability, and execution workflows.
 
 ### Content Agent
 - [ ] Create content generation logic
@@ -514,89 +646,154 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Media upload
 - [ ] For v0.3: export as Markdown for manual posting
 
-### Task Approval Dashboard
-- [ ] Build task review interface
-  - [ ] List tasks in `review` status
-  - [ ] Display generated content
-  - [ ] Edit content inline
-  - [ ] Approve button → marks `completed`
-  - [ ] Reject button → marks `failed`
-  - [ ] Request regeneration button → re-runs content agent
-- [ ] Add bulk actions
-  - [ ] Approve multiple tasks
-  - [ ] Reject multiple tasks
-- [ ] Add preview modes
-  - [ ] Preview blog post formatting
-  - [ ] Preview social post with character counts
-  - [ ] Preview email in inbox style
-
-### Analytics Module (Foundation)
+### Analytics Module (Foundation - BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/analytics/schema.ts`
   - [ ] Metric data (projectId, taskId, timestamp)
   - [ ] Metric type (traffic, impressions, clicks, conversions)
   - [ ] Metric values
   - [ ] Source (GA4, Plausible, social platform)
+  - [ ] Audit fields
 - [ ] Create Zod validation schemas in `modules/analytics/validation.ts`
+  - [ ] Metric recording input schema
+  - [ ] Metric query schema
+  - [ ] Metric response schema
 - [ ] Implement service layer in `modules/analytics/service.ts`
+  - [ ] Extend BaseService
   - [ ] `recordMetric(metricData)` - Store metric
-  - [ ] `getMetrics(projectId, dateRange)` - Retrieve metrics
-  - [ ] `analyzePerformance(projectId)` - Calculate summaries
-- [ ] Build API route in `app/api/analytics/route.ts`
+  - [ ] `getMetrics(projectId, dateRange)` - Retrieve metrics with filtering
+  - [ ] `analyzePerformance(projectId)` - Calculate summaries and aggregations
+- [ ] Create repository in `modules/analytics/repository.ts`
+  - [ ] Extend BaseRepository
+  - [ ] Custom aggregation queries for performance summaries
+- [ ] Build API routes in `app/api/analytics/`
   - [ ] POST /api/analytics - Record metric
-  - [ ] GET /api/analytics?projectId=X - Get metrics
-- [ ] Add manual metric input (for v0.3)
-  - [ ] Form to enter traffic/engagement data
-  - [ ] Associate with tasks
+  - [ ] GET /api/analytics?projectId=X - Get metrics with query parser
+  - [ ] GET /api/analytics/summary?projectId=X - Get performance summaries
 
-### Settings Module
+### Settings Module (BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/settings/schema.ts`
-  - [ ] Per-project automation settings
+  - [ ] Per-project automation settings (one-to-one with project)
   - [ ] Channel preferences (content, social, email, ads)
   - [ ] Automation level per channel (auto, review, off)
   - [ ] Notification preferences
+  - [ ] Audit fields
 - [ ] Create Zod validation schemas in `modules/settings/validation.ts`
+  - [ ] Settings update schema
+  - [ ] Settings response schema
 - [ ] Implement service layer in `modules/settings/service.ts`
-  - [ ] `getSettings(projectId)` - Get settings
+  - [ ] Extend BaseService
+  - [ ] `getSettings(projectId)` - Get settings (create default if not exists)
   - [ ] `updateSettings(projectId, settings)` - Update settings
-- [ ] Build API route in `app/api/settings/route.ts`
-  - [ ] GET /api/settings?projectId=X - Get settings
+  - [ ] Default settings factory
+- [ ] Create repository in `modules/settings/repository.ts`
+  - [ ] Extend BaseRepository
+- [ ] Build API routes in `app/api/settings/`
+  - [ ] GET /api/settings?projectId=X - Get settings for project
   - [ ] PATCH /api/settings/:id - Update settings
-- [ ] Build settings UI
-  - [ ] Toggles for each channel
-  - [ ] Automation level dropdowns (auto/review/off)
-  - [ ] Save button
+  - [ ] Use withAuth, withDb, withValidation HOFs
 
 ### Execution Flow
 - [ ] Wire task execution pipeline
-  - [ ] Listen for manual "execute task" trigger
+  - [ ] Create API endpoint: POST /api/tasks/:id/execute
   - [ ] Call appropriate agent based on task type
-  - [ ] Generate content
+  - [ ] Generate content using AI
   - [ ] Update task with content + set to `review`
-  - [ ] Emit `task.executed` event
-- [ ] Add retry logic
-  - [ ] If content generation fails, retry 3 times
+  - [ ] Emit `task.executed` event via Inngest
+- [ ] Add retry logic via Inngest
+  - [ ] If content generation fails, retry 3 times with exponential backoff
   - [ ] If still fails, mark task as `failed`
   - [ ] Log errors for debugging
 
-### Testing with Airstride
-- [ ] Generate tasks from plan
-- [ ] Execute tasks to generate content
-  - [ ] Generate 2-3 blog posts
-  - [ ] Generate 5-10 social posts
-  - [ ] Generate 1 email campaign
-- [ ] Review content quality
-  - [ ] Is it on-brand?
-  - [ ] Is it accurate?
-  - [ ] Does it need heavy editing?
-- [ ] Iterate on prompts and content generation
-- [ ] Manually publish content and track results
-- [ ] Record metrics in analytics module
+#### Content Generation Integration Tests
+- [ ] Create test file: `tests/integration/content/blog-agent.test.ts`
+  - [ ] Test: Generate blog post from task
+    - [ ] Create test task with blog_post type
+    - [ ] Execute task via API (POST /api/tasks/:id/execute)
+    - [ ] Verify AI generates blog post content
+    - [ ] Verify content includes title, body, meta description
+    - [ ] Verify task status changes to `review`
+    - [ ] Add 90-second timeout for content generation
+  - [ ] Test: Content quality with different contexts
+    - [ ] SaaS product blog post
+    - [ ] E-commerce product blog post
+    - [ ] Verify brand voice alignment
+  - [ ] Test: Blog post regeneration
+    - [ ] Request regeneration for same task
+    - [ ] Verify new content is different
+- [ ] Create test file: `tests/integration/content/social-agent.test.ts`
+  - [ ] Test: Generate LinkedIn post
+    - [ ] Create test task with social_post type (LinkedIn)
+    - [ ] Execute task via API
+    - [ ] Verify post respects character limits
+    - [ ] Verify hashtags and formatting
+  - [ ] Test: Generate Twitter/X post
+    - [ ] Verify 280 character limit
+    - [ ] Verify thread generation if needed
+  - [ ] Test: Generate multiple social posts in batch
+    - [ ] Verify concurrency handling
+- [ ] Create test file: `tests/integration/content/email-agent.test.ts`
+  - [ ] Test: Generate email campaign
+    - [ ] Create test task with email_campaign type
+    - [ ] Execute task via API
+    - [ ] Verify email has subject line, preview text, body
+    - [ ] Verify HTML and plain text versions
+  - [ ] Test: Different email types
+    - [ ] Newsletter
+    - [ ] Product announcement
+    - [ ] Nurture sequence
 
-### Documentation
-- [ ] Update ARCHITECTURE_PLAN.md with learnings
-- [ ] Document common issues and solutions
-- [ ] Create guide for adding new task types
-- [ ] Prepare for v0.4 (analytics feedback loop)
+#### Execution Workflow Integration Tests
+- [ ] Create test file: `tests/integration/execution/task-execution.test.ts`
+  - [ ] Test: Complete execution workflow
+    - [ ] Create project → generate plan → create tasks
+    - [ ] Execute multiple tasks in sequence
+    - [ ] Verify `task.executed` events fire
+    - [ ] Verify all content is generated correctly
+  - [ ] Test: Error handling during execution
+    - [ ] Simulate AI failure
+    - [ ] Verify retry logic
+    - [ ] Verify task marked as failed after max retries
+  - [ ] Test: Idempotency of task execution
+    - [ ] Execute same task twice
+    - [ ] Verify content not regenerated if already in review
+
+#### Analytics Integration Tests
+- [ ] Create test file: `tests/integration/analytics/metrics.test.ts`
+  - [ ] Test: Record metrics via API (POST /api/analytics)
+    - [ ] Record traffic metric
+    - [ ] Record engagement metric
+    - [ ] Verify metrics saved correctly
+  - [ ] Test: Get metrics for project (GET /api/analytics?projectId=X)
+    - [ ] Verify filtering by date range
+    - [ ] Verify filtering by metric type
+  - [ ] Test: Performance summary (GET /api/analytics/summary?projectId=X)
+    - [ ] Verify aggregations are correct
+    - [ ] Verify calculations for summaries
+
+#### Settings Integration Tests
+- [ ] Create test file: `tests/integration/settings/settings.test.ts`
+  - [ ] Test: Get default settings for new project
+    - [ ] Verify default settings are created
+  - [ ] Test: Update settings (PATCH /api/settings/:id)
+    - [ ] Update automation level for content channel
+    - [ ] Verify settings persist
+  - [ ] Test: Settings affect task execution
+    - [ ] Disable automation for channel
+    - [ ] Verify tasks respect settings
+
+### v0.3 Success Criteria (Backend Only)
+- [ ] Content generation agents work reliably
+- [ ] Blog posts are 70%+ ready to publish
+- [ ] Social posts respect platform constraints
+- [ ] Email campaigns are well-formatted
+- [ ] Task execution workflow is stable
+- [ ] Retry and error handling work correctly
+- [ ] All integration tests passing
+- [ ] Can execute tasks end-to-end via API
+- [ ] Analytics can record and retrieve metrics
+- [ ] Settings control automation behavior
+- [ ] Airstride content can be generated and evaluated
+- [ ] Documentation updated with agent patterns and prompt strategies
 
 ---
 
@@ -630,40 +827,153 @@ TWITTER_API_SECRET=
 
 ---
 
-## Success Metrics
+## Frontend (Deferred - Build After Backend is Validated)
 
-### v0.1 Success
-- [ ] Can onboard Airstride with full context
-- [ ] Can generate coherent 30-day plan
-- [ ] Plan includes strategy pillars, content calendar, and KPIs
-- [ ] Plan is stored in database
-- [ ] Plan is displayed in UI
+**Note:** All frontend work will begin AFTER v0.1, v0.2, and v0.3 backend + integration tests are complete and validated.
 
-### v0.2 Success
-- [ ] Events flow end-to-end: project created → plan generated → tasks created
-- [ ] All events are logged and visible
-- [ ] Tasks are created automatically from plan
-- [ ] Task dashboard shows all tasks
+### v0.1 Frontend - Project & Strategy Management
+- [ ] Create onboarding form page
+  - [ ] Company information inputs
+  - [ ] Product description textarea
+  - [ ] ICP definition fields
+  - [ ] Goals input (traffic, leads, revenue)
+  - [ ] Brand voice settings
+  - [ ] Website URL for AI research
+  - [ ] Submit handler
+- [ ] Create project list page
+  - [ ] Display all projects for organization
+  - [ ] Edit/delete actions
+  - [ ] Create new project button
+- [ ] Create plan view page
+  - [ ] Display strategy pillars
+  - [ ] Show 30-day calendar in table/timeline format
+  - [ ] Display KPIs
+  - [ ] JSON export option
+  - [ ] Plan status indicator
+  - [ ] Generate plan button
+
+### v0.2 Frontend - Task Management
+- [ ] Create task list dashboard
+  - [ ] Display all tasks from active plan
+  - [ ] Group by status (pending, in_progress, review, completed)
+  - [ ] Show task details
+  - [ ] Manual status update buttons
+  - [ ] Execute task button
+- [ ] Add event log viewer (optional)
+  - [ ] Show recent events
+  - [ ] Filter by event type
+  - [ ] View event payloads
+
+### v0.3 Frontend - Content Review & Approval
+- [ ] Build task review interface
+  - [ ] List tasks in `review` status
+  - [ ] Display generated content
+  - [ ] Edit content inline
+  - [ ] Approve button → marks `completed`
+  - [ ] Reject button → marks `failed`
+  - [ ] Request regeneration button → re-runs content agent
+- [ ] Add bulk actions
+  - [ ] Approve multiple tasks
+  - [ ] Reject multiple tasks
+- [ ] Add preview modes
+  - [ ] Preview blog post formatting
+  - [ ] Preview social post with character counts
+  - [ ] Preview email in inbox style
+- [ ] Analytics dashboard
+  - [ ] Display metrics charts
+  - [ ] Performance summaries
+  - [ ] Task performance tracking
+- [ ] Settings page
+  - [ ] Toggles for each channel
+  - [ ] Automation level dropdowns (auto/review/off)
+  - [ ] Save button
+
+---
+
+## Overall Success Metrics (Backend-First Approach)
+
+### v0.1 Success (Backend Validated)
+- [x] Projects API fully functional and tested
+- [ ] Strategy API fully functional and tested
+- [ ] AI website research works reliably (via integration tests)
+- [ ] AI plan generation produces quality 30-day plans
+- [ ] All integration tests passing (projects + strategy)
+- [ ] Can test end-to-end via API calls (Postman/Insomnia/curl)
+- [ ] Airstride project can be created via API
+- [ ] Airstride 30-day plan can be generated via API
+- [ ] Plan quality validated manually
+- [ ] Documentation complete for API patterns
+
+### v0.2 Success (Backend Validated)
+- [ ] Events flow end-to-end: project → plan → tasks (tested via integration tests)
+- [ ] All events are type-safe with BaseEvent
+- [ ] Inngest functions are idempotent
+- [ ] Event deduplication works correctly
+- [ ] Concurrency limits prevent overload
+- [ ] All integration tests passing (tasks + events)
+- [ ] Can observe events in Inngest dashboard
+- [ ] Error handling and retries work as expected
+- [ ] Tasks created automatically from plan
 - [ ] No manual intervention needed for task creation
 
-### v0.3 Success
-- [ ] Can generate blog post content from task
-- [ ] Can generate social post content from task
-- [ ] Content quality is 70%+ ready to publish
-- [ ] Approval workflow works smoothly
-- [ ] Can manually publish 1 piece of content and record metrics
-- [ ] Foundation ready for automation in v0.4+
+### v0.3 Success (Backend Validated)
+- [ ] Content generation agents work reliably (tested via integration tests)
+- [ ] Blog posts are 70%+ ready to publish
+- [ ] Social posts respect platform constraints
+- [ ] Email campaigns are well-formatted
+- [ ] Task execution workflow is stable
+- [ ] All integration tests passing (content + execution)
+- [ ] Can execute complete workflow via API: project → plan → tasks → content
+- [ ] Analytics can record and retrieve metrics
+- [ ] Settings control automation behavior
+- [ ] Airstride content generated and evaluated for quality
+- [ ] Foundation ready for frontend + full user workflows
+
+### Frontend Phase Success (After Backend Complete)
+- [ ] Users can onboard projects via UI
+- [ ] Users can review and edit AI-generated plans
+- [ ] Users can see task status and progress
+- [ ] Users can review and approve generated content
+- [ ] Users can view analytics and performance
+- [ ] Users can configure settings per project
+- [ ] Full user workflows validated with Airstride
 
 ---
 
 ## Notes
 
+### Backend-First Development Philosophy
+- **NO FRONTEND until backend is fully validated via integration tests**
+- All modules (Projects, Strategy, Tasks, Content, Analytics, Settings) must have comprehensive integration tests
+- Follow the test pattern in `tests/integration/ai/partner.research.test.ts`
+- Use real AI providers in tests for true integration validation
+- Test with generous timeouts (90-120 seconds for AI operations)
+- Validate API contracts, data persistence, and business logic before building UI
+
+### Testing Strategy
+- Integration tests are the primary validation mechanism
+- Test files should mirror the module structure (e.g., `tests/integration/projects/projects.test.ts`)
+- Each test should be self-contained and create necessary test data
+- Use descriptive test names that explain what is being validated
+- Add console logging in tests to track progress and debug issues
+- Test both happy paths and error scenarios
+
+### Development Workflow
+1. Build backend module (schema → validation → repository → service → API)
+2. Write integration tests for all endpoints and workflows
+3. Run tests and iterate until all pass
+4. Manually test via API clients (Postman/Insomnia/curl)
+5. Document learnings and API patterns
+6. Move to next module
+7. Only build frontend after ALL backend modules are complete and tested
+
+### General Principles
 - Focus on Airstride as the first real customer throughout all phases
 - Prioritize learning over perfection in v0.1-0.3
-- Keep UI minimal and functional - aesthetics come later
 - Document everything - you'll need it when adding autonomy
 - Test event flows thoroughly - they're the foundation of autonomy
 - Don't build integrations until v0.4+ unless needed for testing
+- Keep the codebase modular and follow established architectural patterns
 
 ### AI-Powered Website Research (Context Ingestion)
 - **Primary workflow:** User submits website URL → AI researches → Context auto-populated

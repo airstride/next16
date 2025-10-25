@@ -156,69 +156,210 @@ export class ProjectsService extends BaseService<
   }
 
   /**
-   * Build comprehensive research prompt for AI
+   * Build comprehensive research prompt for AI - GROWTH HACKER EDITION
+   * Extracts everything needed for a data-driven 30-day growth strategy
    */
   private buildResearchPrompt(websiteUrl: string): string {
-    return `You are an expert business analyst conducting comprehensive company research.
+    // Extract domain from URL for search hints
+    const domain = websiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-**Your Task:**
-Research the website ${websiteUrl} and extract detailed company context for marketing strategy development.
+    return `You are an elite growth hacker and business analyst conducting COMPREHENSIVE competitive intelligence and growth strategy research.
 
-**Instructions:**
+**MISSION:**
+Research ${websiteUrl} and extract EVERYTHING needed to build a killer 30-day growth marketing strategy. This means: company basics, competitive landscape, current performance, content strategy, tech stack, resources, and conversion funnel.
 
-1. **Factual Data Extraction** (High Confidence Required):
-   - Company name (from website, meta tags, or content)
-   - Industry and market sector
-   - Company stage (pre-seed, seed, series-a, etc.) - infer from team size, funding mentions, or maturity indicators
-   - Product/service description
-   - Key product features and capabilities
-   - Social media handles and marketing asset URLs
+**CRITICAL SEARCH STRATEGY:**
+Execute these searches systematically (use web search for ALL of these):
 
-2. **Strategic Insights** (Inference Allowed):
-   - Target customer profile (ICP):
-     * Who is this product/service for?
-     * What pain points does it solve?
-     * What demographics or company sizes do they target?
-     * What industries do they serve?
-   
-   - Business goals (infer from messaging):
-     * Growth focus (traffic, leads, revenue, demos)?
-     * Scale indicators from their positioning
-   
-   - Brand voice analysis:
-     * Tone (professional, casual, technical, playful, etc.)
-     * Style (educational, sales-driven, storytelling, etc.)
-     * Key messaging themes and keywords
-     * Brand guidelines visible in their content
+**1. COMPANY BASICS:**
+- "${domain}" (main website)
+- "about ${domain}"
+- "${domain} company"
+- "${domain} linkedin company page"
+- "${domain} crunchbase" OR "${domain} funding"
+- "${domain} team size"
 
-3. **Confidence Scoring:**
-   - Rate your confidence in the extraction:
-     * overall: 0-1 (combined confidence)
-     * factual: 0-1 (confidence in hard facts like name, URLs, features)
-     * inferred: 0-1 (confidence in strategic insights like ICP, goals, voice)
-   
-   - Be honest: if information is unclear or missing, score lower confidence
-   - Mark what you're certain about vs. what you're inferring
+**2. COMPETITIVE INTELLIGENCE:**
+- "${domain} competitors"
+- "${domain} vs [competitor name]" (find top 3-5 competitors)
+- "${domain} alternative"
+- "best ${domain} alternatives"
+- "${domain} comparison"
+- Search SimilarWeb/Ahrefs data for competitor traffic
 
-4. **Research Notes:**
-   - Add notes about:
-     * What data was clearly stated vs. inferred
-     * Any ambiguities or missing information
-     * Suggestions for manual review
+**3. PERFORMANCE & TRAFFIC:**
+- "site:${domain} analytics"
+- "${domain} traffic statistics"
+- "${domain} similarweb"
+- "${domain} monthly visitors"
+- "${domain} SEO ranking"
+- "${domain} top pages" OR "site:${domain} most popular"
 
-**Output Requirements:**
-- Return structured JSON matching the schema
-- Use empty arrays [] for missing list fields
-- Use null/undefined for missing optional fields
-- Be thorough but honest about confidence levels
-- Prioritize accuracy over completeness
+**4. CONTENT INVENTORY:**
+- "site:${domain}/blog"
+- "site:${domain}/resources"
+- "site:${domain}/case-studies"
+- "${domain} content marketing"
+- "${domain} blog publishing frequency"
+- Count blog posts, case studies, whitepapers, videos
 
-**Example Scenarios:**
-- If no social media links found → return empty strings, note in researchNotes
-- If company stage unclear → make best inference, mark lower inferredConfidence
-- If ICP ambiguous → provide general description, note uncertainty
+**5. TECH STACK & TOOLS:**
+- "${domain} builtwith" OR "${domain} technology stack"
+- "${domain} uses [CMS/tool]"
+- Check for: Webflow, WordPress, Contentful, HubSpot, Salesforce, etc.
+- Look for analytics tools (GA4, Plausible, Mixpanel)
+- Email platforms (Mailchimp, SendGrid, Customer.io)
+- SEO tools mentions
 
-Begin research now.`;
+**6. TEAM & RESOURCES:**
+- "${domain} team size"
+- "${domain} employees"
+- "${domain} linkedin" (check company page for headcount)
+- "${domain} careers" OR "${domain} hiring"
+- Look for marketing team size indicators
+
+**7. CONVERSION FUNNEL:**
+- Main CTAs on homepage
+- "site:${domain}/pricing"
+- "site:${domain}/demo"
+- "site:${domain}/signup" OR "site:${domain}/trial"
+- Lead magnets (ebooks, webinars, tools)
+
+**EXTRACTION INSTRUCTIONS:**
+
+### 1. COMPANY FUNDAMENTALS (Factual - High Confidence Required)
+- Company name (from website, meta tags, domain)
+- Industry and market vertical
+- Company stage (pre-seed → public) - check funding announcements
+- Product description (what they do, core value prop)
+- Key features (list 5-10 main capabilities)
+- Social media presence (LinkedIn, Twitter, Facebook, Instagram, YouTube, blog URL)
+- Website description (meta description, tagline)
+
+### 2. COMPETITOR INTELLIGENCE (Research Thoroughly!)
+**Find 3-5 main competitors and for EACH extract:**
+- Competitor name
+- Website URL
+- Positioning statement (how they position vs this company)
+- Strengths (what they do better - 2-3 points)
+- Weaknesses (gaps to exploit - 2-3 points)
+- Estimated monthly traffic (from SimilarWeb data if available)
+
+**CRITICAL:** This data is GOLD for growth strategy. Search extensively!
+
+### 3. CURRENT PERFORMANCE METRICS (Infer from available data)
+- Monthly traffic estimate (from SimilarWeb, Ahrefs mentions, or infer from content volume)
+- Traffic sources breakdown (Organic, Direct, Referral, Social, Paid - percentages)
+- Top performing pages (most linked, most mentioned URLs)
+- Top SEO keywords (what they rank for - from Ahrefs/SEMrush data or infer)
+- Bounce rate (if mentioned anywhere)
+- Average session duration (if mentioned)
+- Monthly leads estimate (infer from scale indicators)
+- Conversion rate (if publicly mentioned - rare but check case studies)
+
+**Note:** Use confidence scoring appropriately - traffic data is often inferred.
+
+### 4. CONTENT INVENTORY (Count & Categorize)
+- Total blog posts (count from site:${domain}/blog search)
+- Total case studies (search for case study pages)
+- Total whitepapers/ebooks (search resources/downloads)
+- Total videos (YouTube channel, site:${domain}/video)
+- Total podcasts (if they have one)
+- Top performing content URLs (most shared/linked)
+- Publishing frequency ("2x/week", "weekly", "monthly", "sporadic")
+- Last published date (check latest blog post date)
+- Content themes (main topics they cover - 3-5 themes)
+
+### 5. MARKETING TECH STACK (Detective Work!)
+- CMS platform (Webflow, WordPress, Contentful, Wix, Squarespace, Custom)
+- Analytics tools (Google Analytics 4, Plausible, Mixpanel, Amplitude)
+- Email platform (Mailchimp, SendGrid, Customer.io, Klaviyo, ConvertKit)
+- CRM system (HubSpot, Salesforce, Pipedrive, Close)
+- Social scheduling (Buffer, Hootsuite, Later, Sprout Social)
+- Marketing automation (Marketo, Pardot, ActiveCampaign, Autopilot)
+- SEO tools mentioned (Ahrefs, SEMrush, Moz)
+- Other tools (chat widgets, A/B testing, heatmaps, etc.)
+
+**Search for:** BuiltWith data, tool mentions in blog posts, integrations pages
+
+### 6. TEAM & RESOURCES (LinkedIn is key!)
+- Total team size (from LinkedIn company page, About page, careers page)
+- Marketing team size (estimate from LinkedIn job titles)
+- Content writers (how many content creators? Check LinkedIn)
+- Has in-house design? (boolean - check for design roles)
+- Has in-house dev? (boolean - check for engineering team)
+- Monthly marketing budget (rarely public - only include if explicitly mentioned)
+- Paid ad budget (rarely public - only if mentioned)
+- Content budget (rarely public - only if mentioned)
+
+### 7. IDEAL CUSTOMER PROFILE (ICP) - Strategic Inference
+- Description (who is the product for?)
+- Pain points they solve (3-5 key problems)
+- Demographics (job titles, company sizes, industries)
+- Target company size ("startups", "SMBs", "enterprise", "10-50 employees")
+- Target industries (list 3-5 verticals they focus on)
+
+### 8. BUSINESS GOALS (Infer from messaging & positioning)
+- Traffic target (infer from current scale + growth messaging)
+- Leads target (infer from funnel indicators)
+- Revenue target (only if public - e.g., ARR mentioned)
+- Demo target (if they push demos)
+- Other goals (brand awareness, market education, etc.)
+
+### 9. BRAND VOICE & STYLE
+- Tone (professional, casual, technical, conversational, playful, authoritative)
+- Style (educational, sales-driven, storytelling, thought-leadership)
+- Keywords they use frequently (5-10 brand keywords)
+- Brand guidelines (any explicit mentions of voice/style)
+
+### 10. CONVERSION FUNNEL (Critical for growth!)
+- Awareness channels (where they drive traffic: SEO, Paid Ads, Social, Content, Partnerships)
+- Consideration assets (what moves prospects: Case Studies, Product Demo, Free Trial, Webinars, Ebooks)
+- Decision triggers (what closes deals: Pricing Page, Demo Call, Sales Contact, Free Trial Signup)
+- Primary CTA (main call-to-action: "Book a Demo", "Start Free Trial", "Get Started", "Contact Sales")
+- Conversion bottleneck (where people drop off - infer from funnel design)
+- Average sales cycle (if mentioned - days from first touch to close)
+
+### 11. CONFIDENCE SCORING
+Rate confidence 0-1 for each category:
+- **overall**: Combined confidence across all data
+- **factual**: Confidence in hard facts (company name, features, URLs)
+- **inferred**: Confidence in strategic insights (ICP, goals, competitors)
+
+**Scoring Guidelines:**
+- 0.9-1.0: Public company with tons of data available
+- 0.7-0.8: Established company with good web presence
+- 0.5-0.6: Early-stage with limited public data
+- 0.3-0.4: Minimal information, heavy inference required
+- 0.0-0.2: Website doesn't exist or is parking page
+
+### 12. RESEARCH NOTES
+Document your research process:
+- Website status (live, under construction, non-existent, parking)
+- What was factual vs inferred
+- Data gaps and ambiguities
+- Suggestions for manual review
+- Alternative sources used (LinkedIn, Crunchbase, BuiltWith, etc.)
+- Confidence caveats (e.g., "traffic estimate based on content volume")
+
+**OUTPUT FORMAT:**
+Return complete JSON matching the schema. For missing data:
+- Use empty arrays [] for list fields
+- Use null/undefined for optional scalar fields
+- NEVER invent data - be honest about gaps
+- Use confidence scores to indicate data quality
+
+**SPECIAL CASES:**
+- **No website/parking page**: Return minimal data with 0.1 confidence
+- **Early-stage stealth**: Search for founder LinkedIn, press releases, limited data OK
+- **No competitor data**: Search harder - there are ALWAYS competitors
+- **No traffic data**: Infer from: content volume, social following, team size, funding
+- **No tech stack data**: Check BuiltWith, look for tool mentions in content
+
+**YOUR GOAL:**
+Extract enough intelligence that a growth hacker can immediately build a data-driven 30-day strategy WITHOUT needing to research the company again.
+
+Begin comprehensive research now. Leave NO stone unturned.`;
   }
 
   /**

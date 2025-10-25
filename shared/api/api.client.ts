@@ -9,7 +9,7 @@
  * - FormData support
  * - Streaming responses
  *
- * All requests are prefixed with `/v2/` which maps to internal API routes
+ * All requests are prefixed with `/v1/` which maps to internal API routes
  * via the Next.js rewrite rule in next.config.mjs
  *
  * @module shared/api/api.client
@@ -105,7 +105,7 @@ async function doFetch<Type>({
         contentType = "application/json";
       }
 
-      response = await fetch(`/v2/${url}`, {
+      response = await fetch(`${url}`, {
         method,
         cache,
         headers: {
@@ -150,7 +150,7 @@ async function doFetch<Type>({
         const err = Object.assign(new Error(message), {
           status: response.status,
           data: json,
-          url: `/v2/${url}`,
+          url,
           method,
         }) as ApiError;
         reject(err);
@@ -172,7 +172,7 @@ async function doFetch<Type>({
  * Performs a GET request.
  *
  * @template Type - Expected response type
- * @param url - API endpoint (without /v2/ prefix)
+ * @param url - API endpoint (without /v1/ prefix)
  * @param headers - Additional headers
  * @param cache - Cache strategy
  * @param isStream - Whether to return a stream instead of parsed JSON
@@ -184,6 +184,18 @@ async function doFetch<Type>({
  * const users = await get<User[]>('users', {}, 'no-cache');
  * ```
  */
+export async function get<Type>(
+  url: FetchType["url"],
+  headers: Record<string, string> | undefined,
+  cache: RequestCache | undefined,
+  isStream: true
+): Promise<ReadableStream<Uint8Array> | null>;
+export async function get<Type>(
+  url: FetchType["url"],
+  headers?: Record<string, string>,
+  cache?: RequestCache,
+  isStream?: false | undefined
+): Promise<Type | null>;
 export async function get<Type>(
   url: FetchType["url"],
   headers?: Record<string, string>,
@@ -203,7 +215,7 @@ export async function get<Type>(
  * Performs a PUT request.
  *
  * @template Type - Expected response type
- * @param url - API endpoint (without /v2/ prefix)
+ * @param url - API endpoint (without /v1/ prefix)
  * @param body - Request body (will be JSON stringified unless FormData)
  * @param isStream - Whether to return a stream instead of parsed JSON
  * @returns Promise resolving to response data or stream
@@ -213,6 +225,16 @@ export async function get<Type>(
  * const updated = await put<User>('users/123', { name: 'John Doe' });
  * ```
  */
+export async function put<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  isStream: true
+): Promise<ReadableStream<Uint8Array> | null>;
+export async function put<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  isStream?: false | undefined
+): Promise<Type | null>;
 export async function put<Type>(
   url: FetchType["url"],
   body: FetchType["body"],
@@ -230,7 +252,7 @@ export async function put<Type>(
  * Performs a POST request.
  *
  * @template Type - Expected response type
- * @param url - API endpoint (without /v2/ prefix)
+ * @param url - API endpoint (without /v1/ prefix)
  * @param body - Request body (will be JSON stringified unless FormData)
  * @param headers - Additional headers
  * @param isStream - Whether to return a stream instead of parsed JSON
@@ -244,6 +266,18 @@ export async function put<Type>(
  * await post('upload', formData);
  * ```
  */
+export async function post<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  headers: Record<string, string> | undefined,
+  isStream: true
+): Promise<ReadableStream<Uint8Array> | null>;
+export async function post<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  headers?: Record<string, string>,
+  isStream?: false | undefined
+): Promise<Type | null>;
 export async function post<Type>(
   url: FetchType["url"],
   body: FetchType["body"],
@@ -263,7 +297,7 @@ export async function post<Type>(
  * Performs a DELETE request.
  *
  * @template Type - Expected response type
- * @param url - API endpoint (without /v2/ prefix)
+ * @param url - API endpoint (without /v1/ prefix)
  * @param body - Optional request body
  * @param isStream - Whether to return a stream instead of parsed JSON
  * @returns Promise resolving to response data or stream
@@ -273,6 +307,16 @@ export async function post<Type>(
  * await del('users/123');
  * ```
  */
+export async function del<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"] | undefined,
+  isStream: true
+): Promise<ReadableStream<Uint8Array> | null>;
+export async function del<Type>(
+  url: FetchType["url"],
+  body?: FetchType["body"],
+  isStream?: false | undefined
+): Promise<Type | null>;
 export async function del<Type>(
   url: FetchType["url"],
   body?: FetchType["body"],
@@ -290,7 +334,7 @@ export async function del<Type>(
  * Performs a PATCH request.
  *
  * @template Type - Expected response type
- * @param url - API endpoint (without /v2/ prefix)
+ * @param url - API endpoint (without /v1/ prefix)
  * @param body - Request body (will be JSON stringified unless FormData)
  * @param isStream - Whether to return a stream instead of parsed JSON
  * @returns Promise resolving to response data or stream
@@ -300,6 +344,16 @@ export async function del<Type>(
  * const updated = await patch<User>('users/123', { name: 'John Smith' });
  * ```
  */
+export async function patch<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  isStream: true
+): Promise<ReadableStream<Uint8Array> | null>;
+export async function patch<Type>(
+  url: FetchType["url"],
+  body: FetchType["body"],
+  isStream?: false | undefined
+): Promise<Type | null>;
 export async function patch<Type>(
   url: FetchType["url"],
   body: FetchType["body"],

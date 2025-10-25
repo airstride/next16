@@ -108,14 +108,103 @@ export const AIExtractedContextSchema = z.object({
   }),
 
   marketing_assets: z.object({
-    linkedin_url: z.string().url().optional().or(z.literal("")),
-    twitter_url: z.string().url().optional().or(z.literal("")),
-    facebook_url: z.string().url().optional().or(z.literal("")),
-    instagram_url: z.string().url().optional().or(z.literal("")),
-    blog_url: z.string().url().optional().or(z.literal("")),
-    youtube_url: z.string().url().optional().or(z.literal("")),
+    linkedin_url: z.string().url().optional(),
+    twitter_url: z.string().url().optional(),
+    facebook_url: z.string().url().optional(),
+    instagram_url: z.string().url().optional(),
+    blog_url: z.string().url().optional(),
+    youtube_url: z.string().url().optional(),
     other_urls: z.array(z.string().url()).optional().default([]),
   }),
+
+  // Growth strategy intelligence
+  competitors: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        website: z.string().url().optional(),
+        positioning: z.string().optional(),
+        strengths: z.array(z.string()).optional().default([]),
+        weaknesses: z.array(z.string()).optional().default([]),
+        estimated_monthly_traffic: z.number().nonnegative().optional(),
+      })
+    )
+    .optional()
+    .default([]),
+
+  current_metrics: z
+    .object({
+      monthly_traffic: z.number().nonnegative().optional(),
+      monthly_leads: z.number().nonnegative().optional(),
+      conversion_rate: z.number().min(0).max(1).optional(),
+      cac: z.number().nonnegative().optional(),
+      ltv: z.number().nonnegative().optional(),
+      top_pages: z.array(z.string()).optional().default([]),
+      top_keywords: z.array(z.string()).optional().default([]),
+      traffic_sources: z
+        .array(
+          z.object({
+            source: z.string(),
+            percentage: z.number().min(0).max(100).optional(),
+          })
+        )
+        .optional()
+        .default([]),
+      bounce_rate: z.number().min(0).max(1).optional(),
+      avg_session_duration: z.number().nonnegative().optional(),
+    })
+    .optional(),
+
+  content_inventory: z
+    .object({
+      total_blog_posts: z.number().nonnegative().optional(),
+      total_case_studies: z.number().nonnegative().optional(),
+      total_whitepapers: z.number().nonnegative().optional(),
+      total_videos: z.number().nonnegative().optional(),
+      total_podcasts: z.number().nonnegative().optional(),
+      top_performing_content: z.array(z.string()).optional().default([]),
+      publishing_frequency: z.string().optional(),
+      last_published: z.coerce.date().optional(),
+      content_themes: z.array(z.string()).optional().default([]),
+    })
+    .optional(),
+
+  tech_stack: z
+    .object({
+      cms: z.string().optional(),
+      analytics: z.array(z.string()).optional().default([]),
+      email_platform: z.string().optional(),
+      crm: z.string().optional(),
+      social_scheduling: z.string().optional(),
+      marketing_automation: z.string().optional(),
+      seo_tools: z.array(z.string()).optional().default([]),
+      other_tools: z.array(z.string()).optional().default([]),
+    })
+    .optional(),
+
+  resources: z
+    .object({
+      total_team_size: z.number().nonnegative().optional(),
+      marketing_team_size: z.number().nonnegative().optional(),
+      content_writers: z.number().nonnegative().optional(),
+      has_in_house_design: z.boolean().optional(),
+      has_in_house_dev: z.boolean().optional(),
+      monthly_marketing_budget: z.number().nonnegative().optional(),
+      paid_ad_budget: z.number().nonnegative().optional(),
+      content_budget: z.number().nonnegative().optional(),
+    })
+    .optional(),
+
+  conversion_funnel: z
+    .object({
+      awareness_channels: z.array(z.string()).optional().default([]),
+      consideration_assets: z.array(z.string()).optional().default([]),
+      decision_triggers: z.array(z.string()).optional().default([]),
+      primary_cta: z.string().optional(),
+      conversion_bottleneck: z.string().optional(),
+      avg_sales_cycle_days: z.number().nonnegative().optional(),
+    })
+    .optional(),
 
   confidence: z.object({
     overall: z
@@ -192,12 +281,12 @@ const ProjectFieldsSchema = z.object({
 
   marketing_assets: z
     .object({
-      linkedin_url: z.string().url().optional().or(z.literal("")),
-      twitter_url: z.string().url().optional().or(z.literal("")),
-      facebook_url: z.string().url().optional().or(z.literal("")),
-      instagram_url: z.string().url().optional().or(z.literal("")),
-      blog_url: z.string().url().optional().or(z.literal("")),
-      youtube_url: z.string().url().optional().or(z.literal("")),
+      linkedin_url: z.string().url().optional(),
+      twitter_url: z.string().url().optional(),
+      facebook_url: z.string().url().optional(),
+      instagram_url: z.string().url().optional(),
+      blog_url: z.string().url().optional(),
+      youtube_url: z.string().url().optional(),
       other_urls: z.array(z.string().url()).optional(),
     })
     .optional(),
@@ -295,12 +384,12 @@ export const RefineContextSchema = z.object({
 
   marketing_assets: z
     .object({
-      linkedin_url: z.string().url().optional().or(z.literal("")),
-      twitter_url: z.string().url().optional().or(z.literal("")),
-      facebook_url: z.string().url().optional().or(z.literal("")),
-      instagram_url: z.string().url().optional().or(z.literal("")),
-      blog_url: z.string().url().optional().or(z.literal("")),
-      youtube_url: z.string().url().optional().or(z.literal("")),
+      linkedin_url: z.string().url().optional(),
+      twitter_url: z.string().url().optional(),
+      facebook_url: z.string().url().optional(),
+      instagram_url: z.string().url().optional(),
+      blog_url: z.string().url().optional(),
+      youtube_url: z.string().url().optional(),
       other_urls: z.array(z.string().url()).optional(),
     })
     .optional(),

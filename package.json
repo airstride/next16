@@ -8,7 +8,13 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint && yarn typecheck",
-    "generate-icons": "node scripts/generate-icons.mjs"
+    "generate-icons": "node scripts/generate-icons.mjs",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest tests/integration",
+    "test:integration:ai": "jest tests/integration/ai",
+    "test:integration:projects": "jest tests/integration/projects"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.37",
@@ -40,12 +46,18 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "dotenv": "^17.2.3",
     "eslint": "^9.38.0",
     "eslint-config-next": "16.0.0",
+    "jest": "^30.2.0",
     "sharp": "^0.34.4",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "packageManager": "yarn@4.10.1+sha512.45bcc0f26c64f59bbfff2a721fbc8226f7a0fe5da70c116cecb09bdfed2514a4d5a22484b75103070175cee5d7d4ad3719cd4be029c94ae5848b44346aefe2a8"

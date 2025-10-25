@@ -131,6 +131,14 @@ export class ProjectFactory extends BaseFactory<
       brand_voice: extractedContext.brand_voice as any,
       marketing_assets: extractedContext.marketing_assets as any,
 
+      // Growth strategy intelligence (NEW)
+      competitors: extractedContext.competitors as any,
+      current_metrics: extractedContext.current_metrics as any,
+      content_inventory: extractedContext.content_inventory as any,
+      tech_stack: extractedContext.tech_stack as any,
+      resources: extractedContext.resources as any,
+      conversion_funnel: extractedContext.conversion_funnel as any,
+
       // Research metadata (required)
       research_metadata: {
         status: ResearchStatus.COMPLETED,
@@ -201,6 +209,46 @@ export class ProjectFactory extends BaseFactory<
       updateData.marketing_assets = {
         ...existingProject.marketing_assets,
         ...refinements.marketing_assets,
+      } as any;
+    }
+
+    // Growth strategy intelligence fields (if present in refinements)
+    if ((refinements as any).competitors) {
+      updateData.competitors = (refinements as any).competitors;
+    }
+
+    if ((refinements as any).current_metrics) {
+      updateData.current_metrics = {
+        ...existingProject.current_metrics,
+        ...(refinements as any).current_metrics,
+      } as any;
+    }
+
+    if ((refinements as any).content_inventory) {
+      updateData.content_inventory = {
+        ...existingProject.content_inventory,
+        ...(refinements as any).content_inventory,
+      } as any;
+    }
+
+    if ((refinements as any).tech_stack) {
+      updateData.tech_stack = {
+        ...existingProject.tech_stack,
+        ...(refinements as any).tech_stack,
+      } as any;
+    }
+
+    if ((refinements as any).resources) {
+      updateData.resources = {
+        ...existingProject.resources,
+        ...(refinements as any).resources,
+      } as any;
+    }
+
+    if ((refinements as any).conversion_funnel) {
+      updateData.conversion_funnel = {
+        ...existingProject.conversion_funnel,
+        ...(refinements as any).conversion_funnel,
       } as any;
     }
 
