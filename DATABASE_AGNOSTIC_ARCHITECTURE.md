@@ -249,34 +249,34 @@ DATABASE_TYPE=postgres
 Services work exactly as before - the factory handles repository creation:
 
 ```typescript
-// modules/projects/service.ts
-export class ProjectsService extends BaseService<
-  IProject,
-  CreateProjectInput,
-  UpdateProjectInput,
-  ProjectResponse
+// modules/clients/service.ts
+export class ClientsService extends BaseService<
+  IClient,
+  CreateClientInput,
+  UpdateClientInput,
+  ClientResponse
 > {
   constructor() {
-    super(PROJECT_MODEL_NAME); // Factory creates MongoDB repo automatically
+    super(CLIENT_MODEL_NAME); // Factory creates MongoDB repo automatically
   }
   
-  protected mapEntityToResponse(entity: IProject): ProjectResponse {
-    return ProjectResponseDTO.fromProject(entity);
+  protected mapEntityToResponse(entity: IClient): ClientResponse {
+    return ClientResponseDTO.fromClient(entity);
   }
   
   protected prepareEntityForCreate(
-    request: CreateProjectInput,
+    request: CreateClientInput,
     userId: string,
     orgId: string
-  ): Partial<IProject> {
-    return projectFactory.createFromRequest(request, userId, orgId);
+  ): Partial<IClient> {
+    return clientFactory.createFromRequest(request, userId, orgId);
   }
   
   protected prepareEntityForUpdate(
-    request: UpdateProjectInput,
+    request: UpdateClientInput,
     userId: string
-  ): Partial<IProject> {
-    return projectFactory.updateFromRequest(request, userId);
+  ): Partial<IClient> {
+    return clientFactory.updateFromRequest(request, userId);
   }
 }
 ```
@@ -284,14 +284,14 @@ export class ProjectsService extends BaseService<
 ### Using in API Routes (No Changes)
 
 ```typescript
-// app/api/projects/route.ts
-import { ProjectsService } from "@/modules/projects/service";
+// app/api/clients/route.ts
+import { ClientsService } from "@/modules/clients/service";
 
 export const GET = withAuth(
   withDb(async (req, context) => {
-    const service = new ProjectsService();
-    const projects = await service.findAll();
-    return SuccessResponse(projects);
+    const service = new ClientsService();
+    const clients = await service.findAll();
+    return SuccessResponse(clients);
   })
 );
 ```
@@ -322,7 +322,7 @@ const users = await repo.find({ is_active: true });
 - ✅ `shared/types/repository.types.ts` - Database-agnostic types
 - ✅ `shared/types/index.ts` - Export DatabaseId
 - ✅ `shared/services/base.service.ts` - Use IRepository + Factory
-- ✅ `modules/projects/service.ts` - Updated imports
+- ✅ `modules/clients/service.ts` - Updated imports
 
 ### Deleted:
 - ✅ `shared/db/base.repository.ts` - Renamed to mongoose.repository.ts
@@ -376,10 +376,10 @@ RepositoryFactory.setDatabaseType("mongodb");
 
 ```typescript
 import { IRepository } from "@/shared/db/repository.interface";
-import { ProjectsService } from "@/modules/projects/service";
+import { ClientsService } from "@/modules/clients/service";
 
 // Create mock repository
-const mockRepo: IRepository<IProject, any> = {
+const mockRepo: IRepository<IClient, any> = {
   find: jest.fn().mockResolvedValue([[], 0]),
   findById: jest.fn().mockResolvedValue(null),
   create: jest.fn().mockResolvedValue({}),
@@ -387,7 +387,7 @@ const mockRepo: IRepository<IProject, any> = {
 };
 
 // Inject mock (would need to add setter in BaseService)
-const service = new ProjectsService();
+const service = new ClientsService();
 service["_repository"] = mockRepo;
 
 // Test

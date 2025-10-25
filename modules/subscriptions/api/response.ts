@@ -7,56 +7,58 @@
  *
  * Transforms domain entities to API responses.
  *
+ * PATTERN: Extends BaseResponseDTO for automatic transformation
+ * - Override transform() to handle metadata Map → Object conversion
+ *
  * ARCHITECTURAL BOUNDARIES:
  * ✅ CAN import: ../domain/types
  * ✅ CAN import: ./validation
+ * ✅ CAN import: @/shared/api (BaseResponseDTO)
  * ❌ CANNOT import: ../infrastructure/schema
  */
 
+import { BaseResponseDTO } from "@/shared/api/base.response.dto";
 import { ISubscription } from "../domain/types";
 import { SubscriptionResponse } from "./validation";
 
 /**
- * Subscription Response Builder
+ * Subscription Response DTO
+ * Extends BaseResponseDTO with custom metadata transformation
  */
-export class SubscriptionResponseDTO {
+class SubscriptionResponseDTOClass extends BaseResponseDTO<
+  ISubscription,
+  SubscriptionResponse
+> {
   /**
    * Transform domain entity to API response
-   * Direct mapping since both use snake_case
+   * Uses MongoDB helper + custom Map → Object transformation
    */
-  static fromSubscription(entity: ISubscription): SubscriptionResponse {
+  protected transform(entity: ISubscription): SubscriptionResponse {
+    // Get base MongoDB transformation (_id → id)
+    const baseResponse = this.transformMongoEntity(entity);
+
     return {
-      id: entity._id.toString(),
-      propel_auth_org_id: entity.propel_auth_org_id,
-      tier: entity.tier,
-      status: entity.status,
-      trial_started_at: entity.trial_started_at,
-      trial_ends_at: entity.trial_ends_at,
-      billing_cycle: entity.billing_cycle,
-      current_period_start: entity.current_period_start,
-      current_period_end: entity.current_period_end,
-      stripe_customer_id: entity.stripe_customer_id,
-      stripe_subscription_id: entity.stripe_subscription_id,
-      limits: entity.limits,
-      usage: entity.usage,
-      usage_reset_at: entity.usage_reset_at,
-      usage_period_start: entity.usage_period_start,
+      ...baseResponse,
+      // Transform Map to plain object for JSON serialization
       metadata: entity.metadata
         ? Object.fromEntries(entity.metadata)
         : undefined,
-      user_id: entity.created_by,
-      organization_id: entity.created_by_propel_auth_org_id,
-      created_at: entity.created_at,
-      updated_at: entity.updated_at,
-      created_by: entity.created_by,
-      updated_by: entity.updated_by,
-    };
-  }
-
-  /**
-   * Transform multiple entities
-   */
-  static fromSubscriptions(entities: ISubscription[]): SubscriptionResponse[] {
-    return entities.map((entity) => this.fromSubscription(entity));
+    } as SubscriptionResponse;
   }
 }
+
+/**
+ * Singleton instance for use across the application
+ */
+export const SubscriptionResponseDTO = new SubscriptionResponseDTOClass();
+
+/**
+ * Convenience functions
+ */
+export const toSubscriptionResponse = (
+  entity: ISubscription
+): SubscriptionResponse => SubscriptionResponseDTO.fromEntity(entity);
+
+export const toSubscriptionResponses = (
+  entities: ISubscription[]
+): SubscriptionResponse[] => SubscriptionResponseDTO.fromEntities(entities);

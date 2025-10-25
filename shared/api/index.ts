@@ -28,3 +28,7 @@ export {
   noContentResponse,
   createErrorResponse,
 } from "./response.helpers";
+
+// Base Response DTO
+export { BaseResponseDTO } from "./base.response.dto";
+export type { ResponseWithId } from "./base.response.dto";

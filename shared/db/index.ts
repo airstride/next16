@@ -30,3 +30,13 @@ export {
 
 // Base Factory
 export { BaseFactory } from "./base.factory";
+
+// Schema Builder (Zod-to-Mongoose)
+export {
+  zodToMongoose,
+  zodToMongooseField,
+  mergeWithBaseFields,
+  createSchemaBuilder,
+  SchemaBuilder,
+  type MongooseSchemaOptions,
+} from "./schema.builder";

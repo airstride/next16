@@ -26,16 +26,16 @@ modules/
 **API Routes (Server-Side):**
 ```typescript
 // Import services from server.ts
-import { projectsService } from "@/modules/projects/server";
+import { clientsService } from "@/modules/clients/server";
 
 // Import validation schemas from index.ts
-import { CreateProjectSchema } from "@/modules/projects";
+import { CreateClientSchema } from "@/modules/clients";
 ```
 
 **Client Components:**
 ```typescript
 // Import validation schemas and types from index.ts
-import { CreateProjectSchema, type ProjectResponse } from "@/modules/projects";
+import { CreateClientSchema, type ClientResponse } from "@/modules/clients";
 
 // ❌ NEVER import from server.ts in client code
 ```
@@ -44,11 +44,11 @@ import { CreateProjectSchema, type ProjectResponse } from "@/modules/projects";
 
 ```typescript
 // ❌ Don't import directly from internal files
-import { projectsService } from "@/modules/projects/service";
-import { CreateProjectSchema } from "@/modules/projects/validation";
+import { clientsService } from "@/modules/clients/service";
+import { CreateClientSchema } from "@/modules/clients/validation";
 
 // ❌ Don't import server exports in client code
-import { projectsService } from "@/modules/projects/server"; // Client code
+import { clientsService } from "@/modules/clients/server"; // Client code
 ```
 
 ## File Responsibilities
@@ -118,36 +118,36 @@ import { projectsService } from "@/modules/projects/server"; // Client code
 ## Creating a New Module
 
 1. Create the module directory: `modules/your-module/`
-2. Copy the structure from an existing module (e.g., `projects`)
+2. Copy the structure from an existing module (e.g., `clients`)
 3. Create `index.ts` and `server.ts` barrel exports
 4. Implement your schemas, services, and validation
 5. Export appropriately through the barrel files
 6. Document module-specific details in a README
 
-## Example: Projects Module
+## Example: Clients Module
 
 ```typescript
-// modules/projects/index.ts
-export { CreateProjectSchema, UpdateProjectSchema } from "./validation";
-export type { ProjectResponse, CreateProjectInput } from "./validation";
+// modules/clients/index.ts
+export { CreateClientSchema, UpdateClientSchema } from "./validation";
+export type { ClientResponse, CreateClientInput } from "./validation";
 export { CompanyStage, ResearchStatus } from "./types";
 
-// modules/projects/server.ts
-export { projectsService } from "./service";
-export { PROJECT_MODEL_NAME } from "./schema";
-export type { IProject } from "./schema";
+// modules/clients/server.ts
+export { clientsService } from "./service";
+export { CLIENT_MODEL_NAME } from "./schema";
+export type { IClient } from "./schema";
 ```
 
 Usage in API routes:
 ```typescript
-import { projectsService } from "@/modules/projects/server";
-import { CreateProjectSchema } from "@/modules/projects";
+import { clientsService } from "@/modules/clients/server";
+import { CreateClientSchema } from "@/modules/clients";
 
 export const POST = withValidation(
-  CreateProjectSchema,
+  CreateClientSchema,
   async (req, {}, { body }) => {
-    const project = await projectsService.createProject(body);
-    return NextResponse.json(project);
+    const client = await clientsService.createClient(body);
+    return NextResponse.json(client);
   }
 );
 ```

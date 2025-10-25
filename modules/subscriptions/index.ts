@@ -69,7 +69,11 @@ export {
   type FeatureAccessResponse,
 } from "./api/validation";
 
-export { SubscriptionResponseDTO } from "./api/response";
+export {
+  SubscriptionResponseDTO,
+  toSubscriptionResponse,
+  toSubscriptionResponses,
+} from "./api/response";
 
 export { subscriptionQueryConfig } from "./api/query.config";
 

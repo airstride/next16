@@ -1,7 +1,7 @@
 # Growthmind Development TODO List
 
 ### Prerequisites & Infrastructure
-**These must be completed before building the Projects Module**
+**These must be completed before building the Clients Module**
 
 ### Database Setup
 - [x] Set up MongoDB connection with `DatabaseService` in `shared/db/database.service.ts`
@@ -204,7 +204,7 @@
 
 ## Development Order
 1. ✅ **Prerequisites & Infrastructure** - COMPLETE
-2. 🔄 **Phase v0.1 Backend** - Projects + Strategy modules with integration tests
+2. 🔄 **Phase v0.1 Backend** - Clients + Strategy modules with integration tests
 3. ⏳ **Phase v0.2 Backend** - Inngest event engine + Tasks module with integration tests
 4. ⏳ **Phase v0.3 Backend** - Content generation agents with integration tests
 5. ⏳ **Frontend Development** - Build UI after all backend is validated
@@ -224,22 +224,22 @@
 **Testing Philosophy:** All backend functionality must be validated via integration tests before building frontend.
 Use Jest integration tests following the pattern in `tests/integration/ai/partner.research.test.ts`.
 
-### Projects Module (Context Ingestion)
+### Clients Module (Context Ingestion)
 
 **Domain Model Architecture:**
-- **Project** = Persistent company/product context (the "truth file")
+- **Client** = Persistent company/product context (the "truth file")
   - ONE per company/product
   - Company profile, product, ICP, baseline brand voice, default goals
   - Long-lived, rarely changes
 - **Campaign** = Separate module (to be implemented later)
   - Will be a standalone module in `modules/campaigns/`
-  - Multiple campaigns per project (via project_id reference)
+  - Multiple campaigns per client (via client_id reference)
   - Each with specific goals, voice overrides, date ranges
   - Examples: product launch, feature release, SEO content campaign
 
-For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a separate module when needed.
+For v0.1 MVP: Clients-only implementation. Campaigns module will be added as a separate module when needed.
 
-- [x] Define Mongoose schema in `modules/projects/schema.ts`
+- [x] Define Mongoose schema in `modules/clients/infrastructure/schema.ts`
   - [x] Company profile fields (name, industry, stage, website)
   - [x] Product description
   - [x] ICP (ideal customer profile)
@@ -255,13 +255,13 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [x] **ENHANCED:** Tech stack (CMS, analytics, email, CRM, social scheduling, marketing automation, SEO tools)
   - [x] **ENHANCED:** Resources (team size, marketing team, writers, in-house capabilities, budgets)
   - [x] **ENHANCED:** Conversion funnel (awareness channels, consideration assets, decision triggers, primary CTA, bottleneck)
-- [x] Create Zod validation schemas in `modules/projects/validation.ts`
+- [x] Create Zod validation schemas in `modules/clients/domain/validation.ts`
   - [x] Website URL input validation (for AI research trigger)
   - [x] AI-extracted context validation schema
   - [x] Manual context override validation
   - [x] Update context validation
   - [x] Response schemas
-- [x] Implement AI research service in `modules/projects/service.ts`
+- [x] Implement AI research service in `modules/clients/application/service.ts`
   - [x] `researchWebsite(websiteUrl)` - Use ai-sdk with web search to research company
     - [x] Use `generateStructuredOutputWithWebSearch()` from ai-sdk
     - [x] Extract company name, industry, stage, product description
@@ -276,55 +276,55 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
     - [x] **ENHANCED PROMPT:** Tech stack detection (BuiltWith data, CMS, analytics, email platforms)
     - [x] **ENHANCED PROMPT:** Team size research (LinkedIn company page data)
     - [x] **ENHANCED PROMPT:** Conversion funnel mapping (CTAs, lead magnets, sales triggers)
-  - [x] `createProjectFromWebsite(websiteUrl, userId)` - Research + create project
+  - [x] `createClientFromWebsite(websiteUrl, userId)` - Research + create client
     - [x] Call `researchWebsite()` to get AI-extracted context
-    - [x] Store extracted data in Projects schema
+    - [x] Store extracted data in Clients schema
     - [x] Mark as AI-researched with metadata
     - [x] Allow manual refinement later
-  - [x] `createProject(data)` - Create project with manual data
-  - [x] `getProjectContext(projectId)` - Retrieve project data
-  - [x] `updateContext(projectId, updates)` - Update project details
-  - [x] `refineContext(projectId, refinements)` - User refines AI-extracted data
-- [x] Build API routes for projects module (lightweight pattern)
-  - [x] GET /api/projects - List all projects for organization
-  - [x] POST /api/projects - Create project manually
-  - [x] POST /api/projects/research - Submit website URL for AI research
-  - [x] GET /api/projects/:id - Get project by ID
-  - [x] PATCH /api/projects/:id - Update project
-  - [x] DELETE /api/projects/:id - Delete project (soft delete)
-  - [x] POST /api/projects/:id/refine - Refine AI-extracted context
+  - [x] `createClient(data)` - Create client with manual data
+  - [x] `getClientContext(clientId)` - Retrieve client data
+  - [x] `updateContext(clientId, updates)` - Update client details
+  - [x] `refineContext(clientId, refinements)` - User refines AI-extracted data
+- [x] Build API routes for clients module (lightweight pattern)
+  - [x] GET /api/clients - List all clients for organization
+  - [x] POST /api/clients - Create client manually
+  - [x] POST /api/clients/research - Submit website URL for AI research
+  - [x] GET /api/clients/:id - Get client by ID
+  - [x] PATCH /api/clients/:id - Update client
+  - [x] DELETE /api/clients/:id - Delete client (soft delete)
+  - [x] POST /api/clients/:id/refine - Refine AI-extracted context
   - [x] All routes use lightweight pattern: withAuth → withDb → withValidation → service call
   - [x] All routes use createErrorResponse helper for consistent error handling
   - [x] All routes include proper ownership verification for user/org access control
   - [x] Fixed nativeEnum usage to z.enum with array values per project rules
 
-#### Projects Module Integration Tests
-- [ ] Create test file: `tests/integration/projects/projects.test.ts`
-  - [ ] Test: Create project manually via API (POST /api/projects)
+#### Clients Module Integration Tests
+- [ ] Create test file: `tests/integration/clients/clients.test.ts`
+  - [ ] Test: Create client manually via API (POST /api/clients)
     - [ ] Verify response structure matches schema
-    - [ ] Verify project is saved to database with correct ownership
+    - [ ] Verify client is saved to database with correct ownership
     - [ ] Verify audit fields (created_by, created_at)
-  - [ ] Test: Research website and create project (POST /api/projects/research)
+  - [ ] Test: Research website and create client (POST /api/clients/research)
     - [ ] Test with real company website (e.g., "Shopify")
     - [ ] Verify AI extracts company profile correctly
     - [ ] Verify products array is populated
     - [ ] Verify research metadata is set
     - [ ] Add 90-second timeout for AI operations
-  - [ ] Test: Get project by ID (GET /api/projects/:id)
-    - [ ] Verify retrieval of created project
-    - [ ] Verify access control (user can only get own org's projects)
-  - [ ] Test: Update project (PATCH /api/projects/:id)
+  - [ ] Test: Get client by ID (GET /api/clients/:id)
+    - [ ] Verify retrieval of created client
+    - [ ] Verify access control (user can only get own org's clients)
+  - [ ] Test: Update client (PATCH /api/clients/:id)
     - [ ] Verify partial updates work
     - [ ] Verify updated_at timestamp changes
-  - [ ] Test: Refine AI-extracted context (POST /api/projects/:id/refine)
+  - [ ] Test: Refine AI-extracted context (POST /api/clients/:id/refine)
     - [ ] Verify user can override AI-extracted data
-  - [ ] Test: Delete project (DELETE /api/projects/:id)
+  - [ ] Test: Delete client (DELETE /api/clients/:id)
     - [ ] Verify soft delete (is_deleted flag)
-    - [ ] Verify deleted project not returned in list
-  - [ ] Test: List all projects (GET /api/projects)
+    - [ ] Verify deleted client not returned in list
+  - [ ] Test: List all clients (GET /api/clients)
     - [ ] Verify pagination works
     - [ ] Verify filtering by organization
-- [ ] Create test file: `tests/integration/projects/projects.service.test.ts`
+- [ ] Create test file: `tests/integration/clients/clients.service.test.ts`
   - [ ] Test: AI website research with web search
     - [ ] Mock or use real AI provider (prefer real for integration)
     - [ ] Verify structured output format
@@ -335,14 +335,14 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 
 ### Strategy Module (Plan Generation - BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/strategy/schema.ts`
-  - [ ] Plan metadata (projectId, createdAt, version)
+  - [ ] Plan metadata (clientId, createdAt, version)
   - [ ] Strategy pillars (narrative, channels, tactics)
   - [ ] 30-day content calendar
   - [ ] KPIs and success metrics
   - [ ] Status (draft, active, completed)
   - [ ] Audit fields (created_by, updated_by, created_by_propel_auth_org_id)
 - [ ] Create Zod validation schemas in `modules/strategy/validation.ts`
-  - [ ] Plan generation input (projectId, optional overrides)
+  - [ ] Plan generation input (clientId, optional overrides)
   - [ ] Plan output structure (strategy pillars, calendar, KPIs)
   - [ ] Plan response schema
 - [ ] Build AI provider abstraction (use existing ai-sdk)
@@ -352,36 +352,36 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Use AIProvider.ANTHROPIC or AIProvider.GOOGLE based on performance
 - [ ] Implement service layer in `modules/strategy/service.ts`
   - [ ] Extend BaseService<StrategyEntity, CreateStrategyRequest, UpdateStrategyRequest, StrategyResponse>
-  - [ ] `generatePlan(projectContext)` - Call AI to generate 30-day strategy
+  - [ ] `generatePlan(clientContext)` - Call AI to generate 30-day strategy
     - [ ] Use `generateStructuredOutput()` from ai-sdk
-    - [ ] Pass project context (company profile, ICP, goals, brand voice)
+    - [ ] Pass client context (company profile, ICP, goals, brand voice)
     - [ ] Temperature: 0.5-0.7 for balanced creativity
     - [ ] Return structured plan with narrative, tactics, calendar
   - [ ] `storePlan(plan)` - Save plan to database via repository
   - [ ] `getPlan(planId)` - Retrieve plan
-  - [ ] `getPlansByProject(projectId)` - Get all plans for a project
+  - [ ] `getPlansByClient(clientId)` - Get all plans for a client
   - [ ] Create comprehensive prompt template for 30-day plan generation
 - [ ] Create repository in `modules/strategy/repository.ts`
   - [ ] Extend BaseRepository<StrategyEntity>
   - [ ] Custom query methods if needed
 - [ ] Build API routes in `app/api/strategy/`
-  - [ ] POST /api/strategy/generate - Generate new plan from projectId
+  - [ ] POST /api/strategy/generate - Generate new plan from clientId
     - [ ] Use withAuth, withDb, withValidation HOFs
-    - [ ] Validate projectId exists and user has access
+    - [ ] Validate clientId exists and user has access
     - [ ] Call service.generatePlan()
     - [ ] Return plan with 201 Created
   - [ ] GET /api/strategy/:id - Get plan by ID
-    - [ ] Verify user has access to project
-  - [ ] GET /api/strategy?projectId=X - List plans for project
+    - [ ] Verify user has access to client
+  - [ ] GET /api/strategy?clientId=X - List plans for client
     - [ ] Use query parser for pagination
   - [ ] PATCH /api/strategy/:id - Update plan (for manual refinements)
   - [ ] DELETE /api/strategy/:id - Soft delete plan
 
 #### Strategy Module Integration Tests
 - [ ] Create test file: `tests/integration/strategy/strategy.test.ts`
-  - [ ] Test: Generate plan from project (POST /api/strategy/generate)
-    - [ ] First create a test project via Projects API
-    - [ ] Generate plan using projectId
+  - [ ] Test: Generate plan from client (POST /api/strategy/generate)
+    - [ ] First create a test client via Clients API
+    - [ ] Generate plan using clientId
     - [ ] Verify AI returns structured plan with all required fields
     - [ ] Verify plan includes strategy pillars
     - [ ] Verify 30-day calendar is populated with tasks
@@ -390,15 +390,15 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Test: Get plan by ID (GET /api/strategy/:id)
     - [ ] Verify retrieval of generated plan
     - [ ] Verify access control
-  - [ ] Test: List plans by project (GET /api/strategy?projectId=X)
-    - [ ] Verify all plans for project are returned
+  - [ ] Test: List plans by client (GET /api/strategy?clientId=X)
+    - [ ] Verify all plans for client are returned
     - [ ] Verify pagination
   - [ ] Test: Update plan (PATCH /api/strategy/:id)
     - [ ] Test manual refinement of AI-generated plan
   - [ ] Test: Delete plan (DELETE /api/strategy/:id)
     - [ ] Verify soft delete
 - [ ] Create test file: `tests/integration/strategy/strategy.service.test.ts`
-  - [ ] Test: AI plan generation with different project types
+  - [ ] Test: AI plan generation with different client types
     - [ ] SaaS company context
     - [ ] E-commerce company context
     - [ ] Service business context
@@ -408,13 +408,13 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
     - [ ] Verify tactics are specific and relevant
 
 ### v0.1 Success Criteria (Backend Only)
-- [ ] Projects API fully functional and tested
+- [ ] Clients API fully functional and tested
 - [ ] Strategy API fully functional and tested
 - [ ] AI website research works reliably
 - [ ] AI plan generation produces quality 30-day plans
 - [ ] All integration tests passing
 - [ ] Can test end-to-end via API calls (Postman/curl)
-- [ ] Airstride project can be created and plan generated
+- [ ] Airstride client can be created and plan generated
 - [ ] Document learnings and prompt iterations
 
 ---
@@ -440,52 +440,52 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 ### Event Schema & Registry
 - [ ] Create base event types in `shared/types/inngest.types.ts` ✅
   - [ ] Define `BaseEvent<TName, TData>` interface
-  - [ ] Define `BaseEventMetadata` with timestamp, userId, projectId, version, correlationId, source
+  - [ ] Define `BaseEventMetadata` with timestamp, userId, clientId, version, correlationId, source
   - [ ] Create `createEvent()` helper function
   - [ ] Create `isBaseEvent()` type guard
   - [ ] Export helper types: `EventData<T>`, `EventName<T>`
 - [ ] Define event schemas in `modules/events/schema.ts`
   - [ ] All events MUST extend `BaseEvent<TName, TData>`
-  - [ ] `ProjectCreatedEvent extends BaseEvent<'project.created', ProjectCreatedData>`
-  - [ ] `ProjectUpdatedEvent extends BaseEvent<'project.updated', ProjectUpdatedData>`
+  - [ ] `ClientCreatedEvent extends BaseEvent<'client.created', ClientCreatedData>`
+  - [ ] `ClientUpdatedEvent extends BaseEvent<'client.updated', ClientUpdatedData>`
   - [ ] `PlanGeneratedEvent extends BaseEvent<'plan.generated', PlanGeneratedData>`
   - [ ] `TaskCreatedEvent extends BaseEvent<'task.created', TaskCreatedData>`
   - [ ] `TaskUpdatedEvent extends BaseEvent<'task.updated', TaskUpdatedData>`
   - [ ] `TaskExecutedEvent extends BaseEvent<'task.executed', TaskExecutedData>`
   - [ ] Define payload data types for each event
 - [ ] Create event registry in `modules/events/registry.ts`
-  - [ ] Export union type of all events: `type GrowthmindEvent = ProjectCreatedEvent | PlanGeneratedEvent | ...`
+  - [ ] Export union type of all events: `type GrowthmindEvent = ClientCreatedEvent | PlanGeneratedEvent | ...`
   - [ ] Export event name union: `type GrowthmindEventName = GrowthmindEvent['name']`
   - [ ] Add TypeScript types for all events
   - [ ] Document event payload structures
   - [ ] Add examples for each event type
 
-### Projects Module Events
-- [ ] Add Inngest handlers to `modules/projects/inngest.ts`
+### Clients Module Events
+- [ ] Add Inngest handlers to `modules/clients/inngest.ts`
   - [ ] Import `BaseEvent` and `createEvent` from `shared/types/inngest.types`
   - [ ] Import event types from `modules/events/schema`
-  - [ ] Emit `ProjectCreatedEvent` when project is created
-  - [ ] Emit `ProjectUpdatedEvent` when context changes
+  - [ ] Emit `ClientCreatedEvent` when client is created
+  - [ ] Emit `ClientUpdatedEvent` when context changes
   - [ ] Ensure all events use `createEvent()` helper for type safety
 - [ ] Update service layer to trigger events
-  - [ ] Call Inngest client in `createProject()` with properly typed event
+  - [ ] Call Inngest client in `createClient()` with properly typed event
   - [ ] Call Inngest client in `updateContext()` with properly typed event
-  - [ ] Pass required metadata: projectId, source='projects-module'
+  - [ ] Pass required metadata: clientId, source='clients-module'
 
 ### Strategy Module Events
 - [ ] Add Inngest handlers to `modules/strategy/inngest.ts`
   - [ ] Import `BaseEvent` and event types from `modules/events/schema`
-  - [ ] Listen for `ProjectCreatedEvent`
-  - [ ] Auto-generate initial plan when project created
+  - [ ] Listen for `ClientCreatedEvent`
+  - [ ] Auto-generate initial plan when client created
   - [ ] Emit `PlanGeneratedEvent` after plan creation using `createEvent()` helper
   - [ ] Ensure type safety with TypeScript - event must match `BaseEvent` structure
 - [ ] Update service layer to trigger events
   - [ ] Emit `PlanGeneratedEvent` in `storePlan()`
-  - [ ] Pass required metadata: projectId, planId, source='strategy-module'
+  - [ ] Pass required metadata: clientId, planId, source='strategy-module'
 
 ### Tasks Module (Foundation)
 - [ ] Define Mongoose schema in `modules/tasks/schema.ts`
-  - [ ] Task metadata (planId, projectId, createdAt)
+  - [ ] Task metadata (planId, clientId, createdAt)
   - [ ] Task type (blog_post, social_post, email_campaign, etc.)
   - [ ] Task details (title, description, content, target)
   - [ ] Status (pending, in_progress, review, completed, failed)
@@ -500,7 +500,7 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] `createTask(taskData)` - Create task
   - [ ] `updateTaskStatus(taskId, status)` - Update status
   - [ ] `getTasksByPlan(planId)` - Get all tasks for a plan
-  - [ ] `getTasksByProject(projectId)` - Get all tasks for a project
+  - [ ] `getTasksByClient(clientId)` - Get all tasks for a client
 - [ ] Add Inngest handlers to `modules/tasks/inngest.ts`
   - [ ] Listen for `plan.generated` event
   - [ ] Parse plan and create tasks
@@ -559,14 +559,14 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 #### Inngest Integration Tests
 - [ ] Create test file: `tests/integration/inngest/event-flow.test.ts`
   - [ ] Test: Complete event flow end-to-end
-    - [ ] Create project → verify `project.created` event fires
+    - [ ] Create client → verify `client.created` event fires
     - [ ] Verify plan auto-generates from event
     - [ ] Verify `plan.generated` event fires
     - [ ] Verify tasks are created from plan
     - [ ] Verify `task.created` event fires for each task
     - [ ] Add generous timeout (3-5 minutes) for complete flow
   - [ ] Test: Event idempotency
-    - [ ] Send duplicate `project.created` event
+    - [ ] Send duplicate `client.created` event
     - [ ] Verify only one plan is generated
     - [ ] Verify eventId deduplication works
   - [ ] Test: Error handling and retries
@@ -577,13 +577,13 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
     - [ ] Verify correlationId traces across related events
     - [ ] Verify source and userId are preserved
 - [ ] Create test file: `tests/integration/inngest/concurrency.test.ts`
-  - [ ] Test: Concurrent project creation
-    - [ ] Create multiple projects simultaneously
+  - [ ] Test: Concurrent client creation
+    - [ ] Create multiple clients simultaneously
     - [ ] Verify concurrency limits are respected
     - [ ] Verify no race conditions in task creation
 
 ### v0.2 Success Criteria (Backend Only)
-- [ ] Events flow end-to-end: project → plan → tasks
+- [ ] Events flow end-to-end: client → plan → tasks
 - [ ] All events are type-safe with BaseEvent
 - [ ] Inngest functions are idempotent
 - [ ] Event deduplication works correctly
@@ -648,7 +648,7 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 
 ### Analytics Module (Foundation - BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/analytics/schema.ts`
-  - [ ] Metric data (projectId, taskId, timestamp)
+  - [ ] Metric data (clientId, taskId, timestamp)
   - [ ] Metric type (traffic, impressions, clicks, conversions)
   - [ ] Metric values
   - [ ] Source (GA4, Plausible, social platform)
@@ -660,19 +660,19 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 - [ ] Implement service layer in `modules/analytics/service.ts`
   - [ ] Extend BaseService
   - [ ] `recordMetric(metricData)` - Store metric
-  - [ ] `getMetrics(projectId, dateRange)` - Retrieve metrics with filtering
-  - [ ] `analyzePerformance(projectId)` - Calculate summaries and aggregations
+  - [ ] `getMetrics(clientId, dateRange)` - Retrieve metrics with filtering
+  - [ ] `analyzePerformance(clientId)` - Calculate summaries and aggregations
 - [ ] Create repository in `modules/analytics/repository.ts`
   - [ ] Extend BaseRepository
   - [ ] Custom aggregation queries for performance summaries
 - [ ] Build API routes in `app/api/analytics/`
   - [ ] POST /api/analytics - Record metric
-  - [ ] GET /api/analytics?projectId=X - Get metrics with query parser
-  - [ ] GET /api/analytics/summary?projectId=X - Get performance summaries
+  - [ ] GET /api/analytics?clientId=X - Get metrics with query parser
+  - [ ] GET /api/analytics/summary?clientId=X - Get performance summaries
 
 ### Settings Module (BACKEND ONLY)
 - [ ] Define Mongoose schema in `modules/settings/schema.ts`
-  - [ ] Per-project automation settings (one-to-one with project)
+  - [ ] Per-client automation settings (one-to-one with client)
   - [ ] Channel preferences (content, social, email, ads)
   - [ ] Automation level per channel (auto, review, off)
   - [ ] Notification preferences
@@ -682,13 +682,13 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
   - [ ] Settings response schema
 - [ ] Implement service layer in `modules/settings/service.ts`
   - [ ] Extend BaseService
-  - [ ] `getSettings(projectId)` - Get settings (create default if not exists)
-  - [ ] `updateSettings(projectId, settings)` - Update settings
+  - [ ] `getSettings(clientId)` - Get settings (create default if not exists)
+  - [ ] `updateSettings(clientId, settings)` - Update settings
   - [ ] Default settings factory
 - [ ] Create repository in `modules/settings/repository.ts`
   - [ ] Extend BaseRepository
 - [ ] Build API routes in `app/api/settings/`
-  - [ ] GET /api/settings?projectId=X - Get settings for project
+  - [ ] GET /api/settings?clientId=X - Get settings for client
   - [ ] PATCH /api/settings/:id - Update settings
   - [ ] Use withAuth, withDb, withValidation HOFs
 
@@ -745,7 +745,7 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
 #### Execution Workflow Integration Tests
 - [ ] Create test file: `tests/integration/execution/task-execution.test.ts`
   - [ ] Test: Complete execution workflow
-    - [ ] Create project → generate plan → create tasks
+    - [ ] Create client → generate plan → create tasks
     - [ ] Execute multiple tasks in sequence
     - [ ] Verify `task.executed` events fire
     - [ ] Verify all content is generated correctly
@@ -763,16 +763,16 @@ For v0.1 MVP: Projects-only implementation. Campaigns module will be added as a 
     - [ ] Record traffic metric
     - [ ] Record engagement metric
     - [ ] Verify metrics saved correctly
-  - [ ] Test: Get metrics for project (GET /api/analytics?projectId=X)
+  - [ ] Test: Get metrics for client (GET /api/analytics?clientId=X)
     - [ ] Verify filtering by date range
     - [ ] Verify filtering by metric type
-  - [ ] Test: Performance summary (GET /api/analytics/summary?projectId=X)
+  - [ ] Test: Performance summary (GET /api/analytics/summary?clientId=X)
     - [ ] Verify aggregations are correct
     - [ ] Verify calculations for summaries
 
 #### Settings Integration Tests
 - [ ] Create test file: `tests/integration/settings/settings.test.ts`
-  - [ ] Test: Get default settings for new project
+  - [ ] Test: Get default settings for new client
     - [ ] Verify default settings are created
   - [ ] Test: Update settings (PATCH /api/settings/:id)
     - [ ] Update automation level for content channel
@@ -831,7 +831,7 @@ TWITTER_API_SECRET=
 
 **Note:** All frontend work will begin AFTER v0.1, v0.2, and v0.3 backend + integration tests are complete and validated.
 
-### v0.1 Frontend - Project & Strategy Management
+### v0.1 Frontend - Client & Strategy Management
 - [ ] Create onboarding form page
   - [ ] Company information inputs
   - [ ] Product description textarea
@@ -840,10 +840,10 @@ TWITTER_API_SECRET=
   - [ ] Brand voice settings
   - [ ] Website URL for AI research
   - [ ] Submit handler
-- [ ] Create project list page
-  - [ ] Display all projects for organization
+- [ ] Create client list page
+  - [ ] Display all clients for organization
   - [ ] Edit/delete actions
-  - [ ] Create new project button
+  - [ ] Create new client button
 - [ ] Create plan view page
   - [ ] Display strategy pillars
   - [ ] Show 30-day calendar in table/timeline format
@@ -893,19 +893,19 @@ TWITTER_API_SECRET=
 ## Overall Success Metrics (Backend-First Approach)
 
 ### v0.1 Success (Backend Validated)
-- [x] Projects API fully functional and tested
+- [x] Clients API fully functional and tested
 - [ ] Strategy API fully functional and tested
 - [ ] AI website research works reliably (via integration tests)
 - [ ] AI plan generation produces quality 30-day plans
-- [ ] All integration tests passing (projects + strategy)
+- [ ] All integration tests passing (clients + strategy)
 - [ ] Can test end-to-end via API calls (Postman/Insomnia/curl)
-- [ ] Airstride project can be created via API
+- [ ] Airstride client can be created via API
 - [ ] Airstride 30-day plan can be generated via API
 - [ ] Plan quality validated manually
 - [ ] Documentation complete for API patterns
 
 ### v0.2 Success (Backend Validated)
-- [ ] Events flow end-to-end: project → plan → tasks (tested via integration tests)
+- [ ] Events flow end-to-end: client → plan → tasks (tested via integration tests)
 - [ ] All events are type-safe with BaseEvent
 - [ ] Inngest functions are idempotent
 - [ ] Event deduplication works correctly
@@ -923,19 +923,19 @@ TWITTER_API_SECRET=
 - [ ] Email campaigns are well-formatted
 - [ ] Task execution workflow is stable
 - [ ] All integration tests passing (content + execution)
-- [ ] Can execute complete workflow via API: project → plan → tasks → content
+- [ ] Can execute complete workflow via API: client → plan → tasks → content
 - [ ] Analytics can record and retrieve metrics
 - [ ] Settings control automation behavior
 - [ ] Airstride content generated and evaluated for quality
 - [ ] Foundation ready for frontend + full user workflows
 
 ### Frontend Phase Success (After Backend Complete)
-- [ ] Users can onboard projects via UI
+- [ ] Users can onboard clients via UI
 - [ ] Users can review and edit AI-generated plans
 - [ ] Users can see task status and progress
 - [ ] Users can review and approve generated content
 - [ ] Users can view analytics and performance
-- [ ] Users can configure settings per project
+- [ ] Users can configure settings per client
 - [ ] Full user workflows validated with Airstride
 
 ---
@@ -944,7 +944,7 @@ TWITTER_API_SECRET=
 
 ### Backend-First Development Philosophy
 - **NO FRONTEND until backend is fully validated via integration tests**
-- All modules (Projects, Strategy, Tasks, Content, Analytics, Settings) must have comprehensive integration tests
+- All modules (Clients, Strategy, Tasks, Content, Analytics, Settings) must have comprehensive integration tests
 - Follow the test pattern in `tests/integration/ai/partner.research.test.ts`
 - Use real AI providers in tests for true integration validation
 - Test with generous timeouts (90-120 seconds for AI operations)
@@ -952,7 +952,7 @@ TWITTER_API_SECRET=
 
 ### Testing Strategy
 - Integration tests are the primary validation mechanism
-- Test files should mirror the module structure (e.g., `tests/integration/projects/projects.test.ts`)
+- Test files should mirror the module structure (e.g., `tests/integration/clients/clients.test.ts`)
 - Each test should be self-contained and create necessary test data
 - Use descriptive test names that explain what is being validated
 - Add console logging in tests to track progress and debug issues
@@ -995,8 +995,8 @@ TWITTER_API_SECRET=
 ### TypeScript Event Pattern Enforcement
 - **ALL Inngest events MUST extend `BaseEvent<TName, TData>`** - this is enforced at compile time
 - Use the `createEvent()` helper function to ensure proper event structure
-- Always include required metadata: `projectId` and `source`
-- Event names use dot notation: `module.action` (e.g., 'project.created', 'plan.generated')
+- Always include required metadata: `clientId` and `source`
+- Event names use dot notation: `module.action` (e.g., 'client.created', 'plan.generated')
 - Event versioning is built in (`version` field) for future backwards compatibility
 - Use correlation IDs to trace related events across the system
 - The TypeScript compiler will error if events don't match the base structure - this is intentional!
@@ -1004,10 +1004,10 @@ TWITTER_API_SECRET=
 ### Idempotency & Concurrency (Critical for Production)
 - **Every event gets a unique `eventId`** - auto-generated if not provided, used for deduplication
 - **Use `idempotencyKey`** for operations that must execute exactly once (e.g., charges, critical updates)
-  - Format: `{projectId}:{eventType}:{resourceId}:{operation}`
-  - Example: `proj_123:task:task_456:update`
+  - Format: `{clientId}:{eventType}:{resourceId}:{operation}`
+  - Example: `client_123:task:task_456:update`
 - **Include `connectionId`** to track which client/session triggered the event (useful for concurrent users)
-- **Set `correlationId`** to trace related events across a logical flow (e.g., project creation → plan generation → task creation)
+- **Set `correlationId`** to trace related events across a logical flow (e.g., client creation → plan generation → task creation)
 - **Configure concurrency limits** per Inngest function based on:
   - External API rate limits (e.g., OpenAI has rate limits)
   - Database connection pool size

@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+This is a database agnostic project so never leak implementations of mongoose anywhere apart from in concrete files.

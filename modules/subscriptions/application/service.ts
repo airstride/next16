@@ -63,7 +63,7 @@ export class SubscriptionsService extends BaseService<
    */
 
   protected mapEntityToResponse(entity: ISubscription): SubscriptionResponse {
-    return SubscriptionResponseDTO.fromSubscription(entity);
+    return SubscriptionResponseDTO.fromEntity(entity);
   }
 
   protected prepareEntityForCreate(

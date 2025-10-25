@@ -1,3 +1,5 @@
+// Copied as reference from another repository
+
 /**
  * @jest-environment node
  */
@@ -33,7 +35,9 @@ describe("Outreach Message Generation Integration Test", () => {
         AIPersonality.CONCISE,
       ];
 
-      console.log("🔍 Starting outreach message generation test with varying personalities...");
+      console.log(
+        "🔍 Starting outreach message generation test with varying personalities..."
+      );
       console.log(`  Contact: ${testInput.contactName}`);
       console.log(`  Company: ${testInput.partnerCompany}`);
       console.log("");
@@ -81,12 +85,16 @@ describe("Outreach Message Generation Integration Test", () => {
         expect(result.object.message).toBeDefined();
         expect(result.object.message.length).toBeGreaterThan(50);
         expect(result.object.tone).toBeDefined();
-        expect(["PROFESSIONAL", "CASUAL", "FORMAL"]).toContain(result.object.tone);
+        expect(["PROFESSIONAL", "CASUAL", "FORMAL"]).toContain(
+          result.object.tone
+        );
 
         // Should mention contact name (first name, last name, or full name)
         const messageLower = result.object.message.toLowerCase();
         const nameParts = testInput.contactName.toLowerCase().split(" ");
-        const mentionsName = nameParts.some((part) => messageLower.includes(part));
+        const mentionsName = nameParts.some((part) =>
+          messageLower.includes(part)
+        );
         expect(mentionsName).toBe(true);
 
         expect(duration).toBeLessThan(TEST_TIMEOUT);
@@ -109,7 +117,9 @@ describe("Outreach Message Generation Integration Test", () => {
       for (const contact of contacts) {
         const prompt = generateOutreachMessagePrompt(contact);
 
-        console.log(`🔍 Generating for: ${contact.contactName} at ${contact.partnerCompany}`);
+        console.log(
+          `🔍 Generating for: ${contact.contactName} at ${contact.partnerCompany}`
+        );
 
         const result = await generateStructuredOutput({
           prompt,
